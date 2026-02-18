@@ -22,6 +22,7 @@
                 [routerLinkActiveOptions]="{exact: true}">Matches</a>
             <a routerLink="/lists" routerLinkActive="text-warning">Lists</a>
             <a routerLink="/messages" routerLinkActive="text-warning">Messages</a>
+            <a *appHasRole="['Admin', 'Moderator']" routerLink="/admin" routerLinkActive="text-warning">Admin</a>
 
             }
             <a routerLink="/errors" routerLinkActive="text-warning">Errors</a>
