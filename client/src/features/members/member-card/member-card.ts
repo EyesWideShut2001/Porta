@@ -13,7 +13,7 @@ import { PresenceService } from '../../../core/services/presence-service';
 })
 export class MemberCard {
   private likeService = inject(LikesService);
-  private presenceService = inject((PresenceService));
+  private presenceService = inject(PresenceService);
   member = input.required<Member> ();
   protected hasLiked = computed(() => this.likeService.likeIds().includes(this.member().id));
   protected isOnline = computed(() => this.presenceService.onlineUsers().includes(this.member().id));

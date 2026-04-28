@@ -10,7 +10,7 @@ import { PaginatedResult } from '../../types/pagination';
 export class LikesService {
   private baseUrl = environment.apiUrl;
   private http = inject(HttpClient);
-  likeIds = signal<string[]> ([]);
+  likeIds = signal<string[]>([]);
 
   toggleLike(targetMemberId: string) {
     return this.http.post(`${this.baseUrl}likes/${targetMemberId}`, {}).subscribe({
@@ -36,7 +36,7 @@ export class LikesService {
 
   getLikeIds() {
     return this.http.get<string[]>(this.baseUrl + 'likes/list').subscribe({
-      next: ids => this.likeIds.set(ids)
+      next: ids => this.likeIds.set(ids ?? [])
     })
   }
 
