@@ -1,4 +1,13 @@
-import { Component, effect, ElementRef, inject, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
+import {
+  Component,
+  effect,
+  ElementRef,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+  ViewChild,
+} from '@angular/core';
 import { MessageService } from '../../../core/services/message-service';
 import { MemberService } from '../../../core/services/member-service';
 import { Message } from '../../../types/message';
@@ -12,54 +21,52 @@ import { ActivatedRoute } from '@angular/router';
   selector: 'app-member-messages',
   imports: [DatePipe, TimeAgoPipe, FormsModule],
   templateUrl: './member-messages.html',
-  styleUrl: './member-messages.css'
+  styleUrl: './member-messages.css',
 })
-export class MemberMessages implements OnInit, OnDestroy{
-  @ViewChild('messageEndRef') messageEndRef!: ElementRef
+export class MemberMessages implements OnInit, OnDestroy {
+  @ViewChild('messageEndRef') messageEndRef!: ElementRef;
   protected messageService = inject(MessageService);
   private memberService = inject(MemberService);
   protected presenceService = inject(PresenceService);
-  private route = inject((ActivatedRoute));
+  private route = inject(ActivatedRoute);
   protected messageContent = '';
 
-  constructor(){
+  constructor() {
     effect(() => {
       const currentMessages = this.messageService.messageThread();
-      if(currentMessages.length > 0) {
+      if (currentMessages.length > 0) {
         this.scrollToBottom();
       }
-    })
+    });
   }
 
   ngOnInit(): void {
     this.route.parent?.paramMap.subscribe({
-      next: params => {
+      next: (params) => {
         const otherUserId = params.get('id');
-        if(!otherUserId) throw new Error('Cannot connect to hub');
+        if (!otherUserId) throw new Error('Cannot connect to hub');
         this.messageService.createHubConnection(otherUserId);
-      }
-    })
+      },
+    });
   }
 
-  sendMessage(){
+  sendMessage() {
     const recipientId = this.memberService.member()?.id;
-    if(!recipientId) return;
+    if (!recipientId) return;
     this.messageService.sendMessage(recipientId, this.messageContent)?.then(() => {
       this.messageContent = '';
-    })
+    });
   }
 
   scrollToBottom() {
     setTimeout(() => {
-        if(this.messageEndRef) {
-          this.messageEndRef.nativeElement.scrollIntoView({behavior: 'smooth'})
-        } 
-    })
-
+      if (this.messageEndRef) {
+        this.messageEndRef.nativeElement.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
   }
 
   ngOnDestroy(): void {
     this.messageService.stopHubConnection();
   }
-
 }

@@ -6,7 +6,7 @@ import { User } from '../../types/user';
 import { Message } from '../../types/message';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PresenceService {
   private hubURL = environment.hubUrl;
@@ -17,34 +17,37 @@ export class PresenceService {
   createHubConnection(user: User) {
     this.hubConnection = new HubConnectionBuilder()
       .withUrl(this.hubURL + 'presence', {
-        accessTokenFactory: () => user.token
+        accessTokenFactory: () => user.token,
       })
       .withAutomaticReconnect()
       .build();
 
-    this.hubConnection.start()
-      .catch(error => console.log(error));
+    this.hubConnection.start().catch((error) => console.log(error));
 
-    this.hubConnection.on('UserOnline', userId => {
-      this.onlineUsers.update(users => [...users, userId])
-    })
+    this.hubConnection.on('UserOnline', (userId) => {
+      this.onlineUsers.update((users) => [...users, userId]);
+    });
 
-    this.hubConnection.on('UserOffline', userId => {
-      this.onlineUsers.update(users => users.filter(x => x !== userId))
-    })
+    this.hubConnection.on('UserOffline', (userId) => {
+      this.onlineUsers.update((users) => users.filter((x) => x !== userId));
+    });
 
-    this.hubConnection.on('GetOnlineUsers', userIds => {
+    this.hubConnection.on('GetOnlineUsers', (userIds) => {
       this.onlineUsers.set(userIds);
-    })
-     this.hubConnection.on('NewMessageReceived', (message: Message) => {
-      this.toast.info(message.senderDisplayName + 'has sent you a new message', 10000, message.senderImageUrl, `/members/${message.senderId}/messages`);
-     })
-
+    });
+    this.hubConnection.on('NewMessageReceived', (message: Message) => {
+      this.toast.info(
+        message.senderDisplayName + 'has sent you a new message',
+        10000,
+        message.senderImageUrl,
+        `/members/${message.senderId}/messages`,
+      );
+    });
   }
 
   stopHubConnection() {
-    if(this.hubConnection?.state === HubConnectionState.Connected) {
-      this.hubConnection.stop().catch(error => console.log(error))
+    if (this.hubConnection?.state === HubConnectionState.Connected) {
+      this.hubConnection.stop().catch((error) => console.log(error));
     }
   }
 }

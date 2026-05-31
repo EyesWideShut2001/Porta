@@ -1,18 +1,17 @@
 import { Component, signal } from '@angular/core';
-import { Register } from "../account/register/register";
+import { Register } from '../account/register/register';
 
 @Component({
   selector: 'app-home',
   imports: [Register],
   templateUrl: './home.html',
-  styleUrl: './home.css'
+  styleUrl: './home.css',
 })
 export class Home {
- // @Input({required: true}) membersFromApp: User[]=[];
+  // @Input({required: true}) membersFromApp: User[]=[];
   protected registerMode = signal(false);
-  
-  showRegister(value: boolean)
-  {
+
+  showRegister(value: boolean) {
     this.registerMode.set(value);
   }
 }

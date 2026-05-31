@@ -4,7 +4,7 @@ import { Component, input, output } from '@angular/core';
   selector: 'app-delete-button',
   imports: [],
   templateUrl: './delete-button.html',
-  styleUrl: './delete-button.css'
+  styleUrl: './delete-button.css',
 })
 export class DeleteButton {
   disabled = input<boolean>();
@@ -12,6 +12,5 @@ export class DeleteButton {
 
   onClick(event: Event) {
     this.clickEvent.emit(event);
-    
   }
 }

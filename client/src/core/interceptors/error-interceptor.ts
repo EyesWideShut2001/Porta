@@ -8,21 +8,20 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const toast = inject(ToastService);
   const router = inject(Router);
   return next(req).pipe(
-    catchError(error =>{
-      if(error) {
+    catchError((error) => {
+      if (error) {
         switch (error.status) {
           case 400:
-            if(error.error.errors){
+            if (error.error.errors) {
               const modelStateErrors = [];
-              for(const key in error.error.errors){
-                if(error.error.errors[key]) {
+              for (const key in error.error.errors) {
+                if (error.error.errors[key]) {
                   modelStateErrors.push(error.error.errors[key]);
                 }
-                
               }
               throw modelStateErrors.flat();
             } else {
-                toast.error(error.error)
+              toast.error(error.error);
             }
             break;
           case 401:
@@ -32,11 +31,10 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             router.navigateByUrl('/not-found');
             break;
           case 500:
-            const navigationExtras: NavigationExtras = {state: {error: error.error}}
-            router.navigateByUrl('/server-error', navigationExtras)
+            const navigationExtras: NavigationExtras = { state: { error: error.error } };
+            router.navigateByUrl('/server-error', navigationExtras);
             break;
 
-        
           default:
             toast.error('Something went wrong');
             break;
@@ -44,6 +42,6 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       throw error;
-    })
-  )
+    }),
+  );
 };

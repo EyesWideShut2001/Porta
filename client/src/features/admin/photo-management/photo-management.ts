@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-photo-management',
   imports: [],
   templateUrl: './photo-management.html',
-  styleUrl: './photo-management.css'
+  styleUrl: './photo-management.css',
 })
-export class PhotoManagement {
-
-}
+export class PhotoManagement {}

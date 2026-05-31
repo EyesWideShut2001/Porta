@@ -6,19 +6,19 @@ import { ApiError } from '../../../types/error';
   selector: 'app-server-error',
   imports: [],
   templateUrl: './server-error.html',
-  styleUrl: './server-error.css'
+  styleUrl: './server-error.css',
 })
 export class ServerError {
   protected error: ApiError;
   private router = inject(Router);
   protected showDetails = false;
 
-  constructor(){
+  constructor() {
     const navigation = this.router.getCurrentNavigation();
     this.error = navigation?.extras?.state?.['error'];
   }
 
-  detailsToggle(){
+  detailsToggle() {
     this.showDetails = !this.showDetails;
   }
 }
