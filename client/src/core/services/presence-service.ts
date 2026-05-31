@@ -25,15 +25,21 @@ export class PresenceService {
     this.hubConnection.start().catch((error) => console.log(error));
 
     this.hubConnection.on('UserOnline', (userId) => {
-      this.onlineUsers.update((users) => [...users, userId]);
+      this.onlineUsers.update((users) => {
+        const currentUsers = Array.isArray(users) ? users : [];
+        return currentUsers.includes(userId) ? currentUsers : [...currentUsers, userId];
+      });
     });
 
     this.hubConnection.on('UserOffline', (userId) => {
-      this.onlineUsers.update((users) => users.filter((x) => x !== userId));
+      this.onlineUsers.update((users) => {
+        const currentUsers = Array.isArray(users) ? users : [];
+        return currentUsers.filter((x) => x !== userId);
+      });
     });
 
     this.hubConnection.on('GetOnlineUsers', (userIds) => {
-      this.onlineUsers.set(userIds);
+      this.onlineUsers.set(Array.isArray(userIds) ? userIds : []);
     });
     this.hubConnection.on('NewMessageReceived', (message: Message) => {
       this.toast.info(
@@ -49,5 +55,6 @@ export class PresenceService {
     if (this.hubConnection?.state === HubConnectionState.Connected) {
       this.hubConnection.stop().catch((error) => console.log(error));
     }
+    this.onlineUsers.set([]);
   }
 }

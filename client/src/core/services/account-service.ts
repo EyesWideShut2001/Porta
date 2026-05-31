@@ -45,7 +45,7 @@ export class AccountService {
   }
 
   refreshToken() {
-    return this.http.post<User>(
+    return this.http.post<User | null>(
       this.baseUrl + 'account/refresh-token',
       {},
       { withCredentials: true },

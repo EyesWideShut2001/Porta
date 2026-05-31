@@ -9,13 +9,13 @@ import { ApiError } from '../../../types/error';
   styleUrl: './server-error.css',
 })
 export class ServerError {
-  protected error: ApiError;
+  protected error: ApiError | null;
   private router = inject(Router);
   protected showDetails = false;
 
   constructor() {
     const navigation = this.router.getCurrentNavigation();
-    this.error = navigation?.extras?.state?.['error'];
+    this.error = navigation?.extras?.state?.['error'] ?? null;
   }
 
   detailsToggle() {

@@ -15,7 +15,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers;
 
-public class AccountController(UserManager<AppUser> userManager, ITokenService tokenService) : BaseApiController
+public class AccountController(
+    UserManager<AppUser> userManager,
+    ITokenService tokenService,
+    IWebHostEnvironment env) : BaseApiController
 {
 
     [HttpPost("register")]  // api/account/register
@@ -103,8 +106,8 @@ public class AccountController(UserManager<AppUser> userManager, ITokenService t
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
+            Secure = !env.IsDevelopment(),
+            SameSite = env.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.Strict,
             Expires = DateTime.UtcNow.AddDays(7)
         };
 

@@ -10,6 +10,10 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((error) => {
       if (error) {
+        if (req.url.includes('account/refresh-token')) {
+          throw error;
+        }
+
         switch (error.status) {
           case 400:
             if (error.error.errors) {
