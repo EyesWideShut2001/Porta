@@ -13,12 +13,12 @@ public class Seed
 {
     public static async Task SeedUsers(UserManager<AppUser> userManager)
     {
-        if(await userManager.Users.AnyAsync()) return;
+        if (await userManager.Users.AnyAsync()) return;
 
         var memberData = await File.ReadAllTextAsync("Data/UserSeedData.json");
         var members = JsonSerializer.Deserialize<List<SeedUserDto>>(memberData);
 
-        if(members == null)
+        if (members == null)
         {
             Console.WriteLine("No membersin seed data!");
             return;
@@ -58,7 +58,7 @@ public class Seed
 
             var result = await userManager.CreateAsync(user, "Pa$$w0rd");
 
-            if(!result.Succeeded)
+            if (!result.Succeeded)
             {
                 Console.WriteLine(result.Errors.First().Description);
             }

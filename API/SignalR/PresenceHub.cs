@@ -31,6 +31,6 @@ public class PresenceHub(PresenceTracker presenceTracker) : Hub
 
     private string GetUserId()
     {
-        return Context.User?.GetMemberId()  ?? throw new HubException("Cannot get member id");
+        return Context.User?.GetMemberId() ?? throw new HubException("Cannot get member id");
     }
 }

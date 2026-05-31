@@ -11,7 +11,7 @@ public class RegisterDto
     [Required]
     [EmailAddress]
     public string Email { get; set; } = "";
-    
+
     [Required]
     [MinLength(4)]
     public string Password { get; set; } = "";
@@ -21,4 +21,4 @@ public class RegisterDto
     [Required] public string Country { get; set; } = string.Empty;
     [Required] public DateOnly DateOfBirth { get; set; }
 
-} 
+}

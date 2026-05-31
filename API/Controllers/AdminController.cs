@@ -8,11 +8,11 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace API.Controllers;
 
-public class AdminController(UserManager <AppUser> userManager) : BaseApiController
+public class AdminController(UserManager<AppUser> userManager) : BaseApiController
 {
     [Authorize(Policy = "RequireAdminRole")]
     [HttpGet("users-with-roles")]
-    public async Task <ActionResult> GetUsersWithRoles()
+    public async Task<ActionResult> GetUsersWithRoles()
     {
         var users = await userManager.Users.ToListAsync();
         var userList = new List<object>();
@@ -20,7 +20,7 @@ public class AdminController(UserManager <AppUser> userManager) : BaseApiControl
         foreach (var user in users)
         {
             var roles = await userManager.GetRolesAsync(user);
-            userList.Add( new
+            userList.Add(new
             {
                 user.Id,
                 user.Email,
@@ -32,25 +32,25 @@ public class AdminController(UserManager <AppUser> userManager) : BaseApiControl
 
     [Authorize(Policy = "RequireAdminRole")]
     [HttpPost("edit-roles/{userId}")]
-    public async Task<ActionResult<IList<string>>> EditRoles(string userId, [FromQuery]string roles)
+    public async Task<ActionResult<IList<string>>> EditRoles(string userId, [FromQuery] string roles)
     {
-        if(string.IsNullOrEmpty(roles)) return BadRequest("You must select at least one role");
+        if (string.IsNullOrEmpty(roles)) return BadRequest("You must select at least one role");
 
         var selectedRoles = roles.Split(",").ToArray();
 
         var user = await userManager.FindByIdAsync(userId);
 
-        if(user == null) return BadRequest("Could not retrieve user");
+        if (user == null) return BadRequest("Could not retrieve user");
 
         var userRoles = await userManager.GetRolesAsync(user);
 
         var result = await userManager.AddToRolesAsync(user, selectedRoles.Except(userRoles));
 
-        if(!result.Succeeded) return BadRequest("Failed to add to roles");
+        if (!result.Succeeded) return BadRequest("Failed to add to roles");
 
         result = await userManager.RemoveFromRolesAsync(user, userRoles.Except(selectedRoles));
 
-        if(!result.Succeeded) return BadRequest("Failed to remove from roles");
+        if (!result.Succeeded) return BadRequest("Failed to remove from roles");
 
         return Ok(await userManager.GetRolesAsync(user));
 

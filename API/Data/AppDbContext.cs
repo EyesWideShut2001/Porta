@@ -8,15 +8,15 @@ using Microsoft.AspNetCore.Identity;
 
 namespace API.Data;
 
-public class AppDbContext (DbContextOptions options) : IdentityDbContext<AppUser>(options)
+public class AppDbContext(DbContextOptions options) : IdentityDbContext<AppUser>(options)
 {
 
-        public DbSet <Member> Members { get; set; }
-        public DbSet <Photo> Photos  { get; set;  }
-        public DbSet <MemberLike> Likes  { get; set;  }
-        public DbSet <Message> Messages { get; set; }
-        public DbSet <Group> Groups { get; set; }
-        public DbSet <Connection> Connections { get; set; }
+    public DbSet<Member> Members { get; set; }
+    public DbSet<Photo> Photos { get; set; }
+    public DbSet<MemberLike> Likes { get; set; }
+    public DbSet<Message> Messages { get; set; }
+    public DbSet<Group> Groups { get; set; }
+    public DbSet<Connection> Connections { get; set; }
 
     //public DbSet <Sport> Sports { get; set; }
 
@@ -26,9 +26,9 @@ public class AppDbContext (DbContextOptions options) : IdentityDbContext<AppUser
 
         modelBuilder.Entity<IdentityRole>()
                 .HasData(
-                        new IdentityRole{Id = "member-id", Name = "Member", NormalizedName = "MEMBER"},
-                        new IdentityRole{Id = "moderator-id", Name = "Moderator", NormalizedName = "MODERATOR"},
-                        new IdentityRole{Id = "admin-id", Name = "Admin", NormalizedName = "ADMIN"}
+                        new IdentityRole { Id = "member-id", Name = "Member", NormalizedName = "MEMBER" },
+                        new IdentityRole { Id = "moderator-id", Name = "Moderator", NormalizedName = "MODERATOR" },
+                        new IdentityRole { Id = "admin-id", Name = "Admin", NormalizedName = "ADMIN" }
                 );
 
         modelBuilder.Entity<Message>()
@@ -65,24 +65,24 @@ public class AppDbContext (DbContextOptions options) : IdentityDbContext<AppUser
         );
 
         var nullableDateTimeConverter = new ValueConverter<DateTime?, DateTime?>(
-                v =>v.HasValue ? v.Value.ToUniversalTime() : null,
+                v => v.HasValue ? v.Value.ToUniversalTime() : null,
                 v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : null
         );
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
-                foreach (var property in entityType.GetProperties())
+            foreach (var property in entityType.GetProperties())
+            {
+                if (property.ClrType == typeof(DateTime))
                 {
-                       if(property.ClrType == typeof(DateTime))
-                        {
-                                property.SetValueConverter(dateTimeConverter);
-                        } 
-                        else if(property.ClrType == typeof(DateTime?))
-                        {
-                                property.SetValueConverter(nullableDateTimeConverter);
-                        }
+                    property.SetValueConverter(dateTimeConverter);
                 }
+                else if (property.ClrType == typeof(DateTime?))
+                {
+                    property.SetValueConverter(nullableDateTimeConverter);
+                }
+            }
         }
     }
-    
+
 }

@@ -20,24 +20,24 @@ public class Member
 
     //Navigation property
     [JsonIgnore]
-    public List <Photo> Photos { get; set; } = [];
+    public List<Photo> Photos { get; set; } = [];
 
     [JsonIgnore]
     public List<MemberLike> LikedByMembers { get; set; } = [];
-    
+
     [JsonIgnore]
     public List<MemberLike> LikedMembers { get; set; } = [];
 
     [JsonIgnore]
     public List<Message> MessagesSent { get; set; } = [];
-    
-    [JsonIgnore]
-    public List<Message> MessagesReceived { get; set; } =[];
 
-    
+    [JsonIgnore]
+    public List<Message> MessagesReceived { get; set; } = [];
+
+
     [JsonIgnore]
     [ForeignKey(nameof(Id))]
-    public AppUser User {get; set;} = null!;
+    public AppUser User { get; set; } = null!;
 
     //public List<Sport> Sports { get; set; } = new();
 

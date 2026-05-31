@@ -17,26 +17,26 @@ public class PresenceTracker
 
     public Task UserDisconnected(string userId, string connectionId)
     {
-        if(OnlineUsers.TryGetValue(userId, out var connections))
+        if (OnlineUsers.TryGetValue(userId, out var connections))
         {
             connections.TryRemove(connectionId, out _);
-            if(connections.IsEmpty)
+            if (connections.IsEmpty)
             {
                 OnlineUsers.TryRemove(userId, out _);
             }
         }
-        
+
         return Task.CompletedTask;
     }
 
     public Task<string[]> GetOnlineUsers()
     {
-        return Task.FromResult(OnlineUsers.Keys.OrderBy(k =>k).ToArray());
+        return Task.FromResult(OnlineUsers.Keys.OrderBy(k => k).ToArray());
     }
 
-    public static Task <List<string>> GetConnectionsForUser(string userId)
+    public static Task<List<string>> GetConnectionsForUser(string userId)
     {
-        if(OnlineUsers.TryGetValue(userId, out var connections))
+        if (OnlineUsers.TryGetValue(userId, out var connections))
         {
             return Task.FromResult(connections.Keys.ToList());
         }

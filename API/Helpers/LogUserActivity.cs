@@ -12,7 +12,7 @@ public class LogUserActivity : IAsyncActionFilter
     {
         var resultContext = await next();
 
-        if(context.HttpContext.User.Identity?.IsAuthenticated != true) return;
+        if (context.HttpContext.User.Identity?.IsAuthenticated != true) return;
 
         var memberId = resultContext.HttpContext.User.GetMemberId();
 

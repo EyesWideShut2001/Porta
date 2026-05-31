@@ -9,5 +9,5 @@ public class Group(string name)
     public string Name { get; set; } = name;
 
     //nav prop
-    public ICollection <Connection> Connections { get; set; } = [];
+    public ICollection<Connection> Connections { get; set; } = [];
 }

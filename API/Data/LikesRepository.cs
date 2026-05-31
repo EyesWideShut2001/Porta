@@ -11,7 +11,7 @@ public class LikesRepository(AppDbContext context) : ILikesRepository
 {
     public void AddLike(MemberLike like)
     {
-        
+
         context.Likes.Add(like);
     }
 

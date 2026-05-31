@@ -34,7 +34,7 @@ public class MessageRepository(AppDbContext context) : IMessageRepository
     {
         return await context.Groups
             .Include(x => x.Connections)
-            .Where(x => x.Connections.Any (c => c.ConnectionId == connectionId))
+            .Where(x => x.Connections.Any(c => c.ConnectionId == connectionId))
             .FirstOrDefaultAsync();
     }
 
@@ -75,8 +75,8 @@ public class MessageRepository(AppDbContext context) : IMessageRepository
             .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.DateRead, DateTime.UtcNow));
 
         return await context.Messages
-            .Where(x => (x.RecipientId == currentMemberId && x.RecipientDeleted == false && x.SenderId == recipientId) 
-                    || (x.SenderId == currentMemberId && x.SenderDeleted == false && x.RecipientId ==recipientId))
+            .Where(x => (x.RecipientId == currentMemberId && x.RecipientDeleted == false && x.SenderId == recipientId)
+                    || (x.SenderId == currentMemberId && x.SenderDeleted == false && x.RecipientId == recipientId))
             .OrderBy(x => x.MessageSent)
             .Select(MessageExtensions.ToDtoProjection())
             .ToListAsync();

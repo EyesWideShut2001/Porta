@@ -21,7 +21,7 @@ public static class MessageExtensions
             Content = message.Content,
             DateRead = message.DateRead,
             MessageSent = message.MessageSent
-            
+
         };
     }
 

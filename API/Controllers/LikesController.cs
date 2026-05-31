@@ -13,9 +13,9 @@ public class LikesController(IUnitOfWork uow) : BaseApiController
     public async Task<ActionResult> ToggleLike(string targetMemberId)
     {
         var sourceMemberId = User.GetMemberId();
-        if(sourceMemberId == targetMemberId) return BadRequest("You cannot like yourself!");
+        if (sourceMemberId == targetMemberId) return BadRequest("You cannot like yourself!");
         var existingLike = await uow.LikesRepository.GetMemberLike(sourceMemberId, targetMemberId);
-        if(existingLike == null)
+        if (existingLike == null)
         {
             var like = new MemberLike
             {
@@ -23,14 +23,14 @@ public class LikesController(IUnitOfWork uow) : BaseApiController
                 TargetMemberId = targetMemberId
             };
 
-            uow.LikesRepository.AddLike(like); 
+            uow.LikesRepository.AddLike(like);
         }
         else
         {
             uow.LikesRepository.DeleteLike(existingLike);
         }
 
-        if(await uow.Complete()) return Ok();
+        if (await uow.Complete()) return Ok();
 
         return BadRequest("Failed to update like");
     }
