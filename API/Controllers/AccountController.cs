@@ -24,18 +24,22 @@ public class AccountController(
     [HttpPost("register")]  // api/account/register
     public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
     {
+        var email = registerDto.Email.Trim();
+        var displayName = registerDto.DisplayName.Trim();
+        var city = registerDto.City.Trim();
+        var country = registerDto.Country.Trim();
 
         var user = new AppUser
         {
-            DisplayName = registerDto.DisplayName,
-            Email = registerDto.Email,
-            UserName = registerDto.Email,
+            DisplayName = displayName,
+            Email = email,
+            UserName = email,
             Member = new Member
             {
-                DisplayName = registerDto.DisplayName,
-                Gender = registerDto.Gender,
-                City = registerDto.City,
-                Country = registerDto.Country,
+                DisplayName = displayName,
+                Gender = registerDto.Gender.Trim().ToLowerInvariant(),
+                City = city,
+                Country = country,
                 DateOfBirth = registerDto.DateOfBirth
 
             }

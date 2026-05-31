@@ -42,7 +42,7 @@ export class MemberService {
     return this.http.get<Photo[]>(this.baseUrl + 'members/' + id + '/photos');
   }
 
-  updateMember(member: EditableMember) {
+  updateMember(member: Partial<EditableMember>) {
     return this.http.put(this.baseUrl + 'members', member);
   }
 

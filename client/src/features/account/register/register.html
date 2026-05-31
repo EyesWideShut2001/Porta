@@ -1,83 +1,281 @@
-<div class="card bg-base-100 w-1/2 mx-auto flex flex-col p-6 rounded-lg shadow-lg">
-  <div class="card-title justify-center text-3xl text-primary">Sign up</div>
-  <div class="card-body w-full">
-    <ul class="steps">
-      <li class="step step-primary">Credentials</li>
-      <li class="step" [class.step-primary]="currentStep() === 2">Profile</li>
-    </ul>
+<div class="mx-auto w-full max-w-2xl px-4">
+  <div class="card border border-base-300 bg-base-100 shadow-sm">
+    <div class="card-body gap-6 p-6 md:p-8">
+      <h1 class="text-center text-3xl font-semibold">Sign up</h1>
 
-    @if (currentStep() === 1) {
-      <form [formGroup]="credentialsForm" class="flex flex-col gap-4 w-full steps">
-        <app-text-input class="mt-2" label="Email" formControlName="email" />
-        <app-text-input label="Display name" formControlName="displayName" />
-        <app-text-input label="Password" formControlName="password" />
-        <app-text-input label="Confirm password" formControlName="confirmPassword" />
-
-        <div class="flex items-center justify-end gap-3">
-          <button (click)="cancel()" type="button" class="btn">Cancel</button>
-          <button
-            [disabled]="!credentialsForm.valid"
-            (click)="nextStep()"
-            class="btn btn-primary"
-            type="button"
-          >
-            Next
-          </button>
-        </div>
-      </form>
-    }
-
-    @if (currentStep() === 2) {
-      <form [formGroup]="profileForm" class="flex flex-col w-full gap-4 steps">
-        <div class="mt-4 flex items-center gap-4">
-          <div class="gap-2 font-semibold">Gender:</div>
-          <label class="flex gap-3 items-center">
-            <span>Male</span>
-            <input type="radio" formControlName="gender" value="male" class="radio radio-primary" />
-          </label>
-
-          <label class="flex gap-3 items-center">
-            <span>Female</span>
-            <input
-              type="radio"
-              formControlName="gender"
-              value="female"
-              class="radio radio-primary"
-            />
-          </label>
-        </div>
-
-        <app-text-input
-          [maxDate]="getMaxDate()"
-          type="date"
-          label="Date of birth"
-          formControlName="dateOfBirth"
-        />
-        <app-text-input label="City" formControlName="city" />
-        <app-text-input label="Country" formControlName="country" />
-
-        <div class="flex items-center justify-end gap-3">
-          <button (click)="prevStep()" type="button" class="btn">Back</button>
-          <button
-            [disabled]="!profileForm.valid"
-            (click)="register()"
-            class="btn btn-primary"
-            type="button"
-          >
-            Register
-          </button>
-        </div>
-      </form>
-    }
-  </div>
-
-  @if (validationErrors().length > 0) {
-    <div class="mt-5 flex bg-gray-200 rounded-2xl w-1/2 p-3 mx-auto">
-      <ul class="flex flex-col text-error space-y-1">
-        @for (error of validationErrors(); track $index) {
-          <li>{{ error }}</li>
-        }
+      <ul class="timeline timeline-horizontal justify-center gap-8">
+        <li class="px-2">
+          <div class="timeline-middle">
+            <div class="badge badge-primary badge-sm">1</div>
+          </div>
+          <div class="timeline-end text-sm">Account</div>
+          <hr [class.bg-primary]="currentStep() >= 2" />
+        </li>
+        <li class="px-2">
+          <hr [class.bg-primary]="currentStep() >= 2" />
+          <div class="timeline-middle">
+            <div class="badge badge-sm" [class.badge-primary]="currentStep() >= 2">2</div>
+          </div>
+          <div class="timeline-end text-sm">Profile</div>
+          <hr [class.bg-primary]="currentStep() >= 3" />
+        </li>
+        <li class="px-2">
+          <hr [class.bg-primary]="currentStep() >= 3" />
+          <div class="timeline-middle">
+            <div class="badge badge-sm" [class.badge-primary]="currentStep() >= 3">3</div>
+          </div>
+          <div class="timeline-end text-sm">Optional</div>
+        </li>
       </ul>
+
+      @if (currentStep() === 1) {
+        <form [formGroup]="credentialsForm" class="flex flex-col gap-4">
+          <app-text-input
+            label="Email"
+            autocomplete="email"
+            maxlength="254"
+            formControlName="email"
+          />
+          <app-text-input
+            label="Display name"
+            autocomplete="name"
+            maxlength="50"
+            formControlName="displayName"
+          />
+          <app-text-input
+            label="Password"
+            type="password"
+            autocomplete="new-password"
+            minlength="8"
+            maxlength="64"
+            formControlName="password"
+          />
+          <app-text-input
+            label="Confirm password"
+            type="password"
+            autocomplete="new-password"
+            minlength="8"
+            maxlength="64"
+            formControlName="confirmPassword"
+          />
+          <div class="flex justify-end gap-3">
+            <button (click)="cancel()" type="button" class="btn btn-ghost">Cancel</button>
+            <button
+              [disabled]="credentialsForm.invalid"
+              (click)="nextStep()"
+              class="btn btn-primary"
+              type="button"
+            >
+              Continue
+            </button>
+          </div>
+        </form>
+      }
+
+      @if (currentStep() === 2) {
+        <form [formGroup]="profileForm" class="flex flex-col gap-4">
+          <fieldset class="fieldset">
+            <legend class="fieldset-legend">Gender</legend>
+            <select
+              formControlName="gender"
+              class="select w-full"
+              [class.select-error]="
+                profileForm.controls['gender'].invalid && profileForm.controls['gender'].touched
+              "
+            >
+              <option value="" disabled>Select gender</option>
+              @for (gender of genders; track gender.value) {
+                <option [value]="gender.value">{{ gender.label }}</option>
+              }
+            </select>
+          </fieldset>
+
+          <fieldset class="fieldset">
+            <legend class="fieldset-legend">Date of birth</legend>
+            <div class="grid gap-3 md:grid-cols-3">
+              <label class="floating-label text-left">
+                <span>Month</span>
+                <select
+                  formControlName="birthMonth"
+                  class="select w-full"
+                  [class.select-error]="
+                    profileForm.hasError('invalidBirthDate') ||
+                    profileForm.hasError('minimumAge') ||
+                    profileForm.hasError('maximumAge')
+                  "
+                >
+                  <option value="" disabled>Month</option>
+                  @for (month of months; track month.value) {
+                    <option [value]="month.value">{{ month.label }}</option>
+                  }
+                </select>
+              </label>
+
+              <label class="floating-label text-left">
+                <span>Day</span>
+                <input
+                  formControlName="birthDay"
+                  inputmode="numeric"
+                  maxlength="2"
+                  min="1"
+                  max="31"
+                  type="text"
+                  class="input w-full"
+                  placeholder="Day"
+                  autocomplete="bday-day"
+                  (keydown)="allowDigitsOnly($event)"
+                  [class.input-error]="
+                    profileForm.controls['birthDay'].invalid &&
+                    profileForm.controls['birthDay'].touched
+                  "
+                />
+              </label>
+
+              <label class="floating-label text-left">
+                <span>Year</span>
+                <input
+                  formControlName="birthYear"
+                  inputmode="numeric"
+                  maxlength="4"
+                  [min]="minBirthYear"
+                  [max]="maxBirthYear"
+                  type="text"
+                  class="input w-full"
+                  placeholder="Year"
+                  autocomplete="bday-year"
+                  (keydown)="allowDigitsOnly($event)"
+                  [class.input-error]="
+                    profileForm.controls['birthYear'].invalid &&
+                    profileForm.controls['birthYear'].touched
+                  "
+                />
+              </label>
+            </div>
+
+            @if (profileForm.hasError('invalidBirthDate') && profileForm.touched) {
+              <div class="validation-hint text-error text-xs">Enter a valid date of birth</div>
+            }
+            @if (profileForm.hasError('minimumAge') && profileForm.touched) {
+              <div class="validation-hint text-error text-xs">You must be at least 18 years old</div>
+            }
+            @if (profileForm.hasError('maximumAge') && profileForm.touched) {
+              <div class="validation-hint text-error text-xs">Enter a realistic date of birth</div>
+            }
+          </fieldset>
+
+          <app-text-input
+            label="City"
+            autocomplete="address-level2"
+            maxlength="80"
+            formControlName="city"
+          />
+
+          <fieldset class="fieldset">
+            <legend class="fieldset-legend">Country</legend>
+            <select
+              formControlName="country"
+              autocomplete="country-name"
+              class="select w-full"
+              [class.select-error]="
+                profileForm.controls['country'].invalid && profileForm.controls['country'].touched
+              "
+            >
+              <option value="" disabled>Select country</option>
+              @for (country of countries; track country.value) {
+                <option [value]="country.value">{{ country.label }}</option>
+              }
+            </select>
+          </fieldset>
+
+          <div class="flex justify-between gap-3">
+            <button (click)="prevStep()" type="button" class="btn">Back</button>
+            <button
+              [disabled]="profileForm.invalid"
+              (click)="nextStep()"
+              class="btn btn-primary"
+              type="button"
+            >
+              Continue
+            </button>
+          </div>
+        </form>
+      }
+
+      @if (currentStep() === 3) {
+        <div class="flex flex-col gap-5">
+          <form [formGroup]="optionalForm" class="flex flex-col gap-3">
+            <label class="floating-label">
+              <span>About you</span>
+              <textarea
+                formControlName="description"
+                maxlength="1000"
+                class="textarea min-h-32 w-full"
+                placeholder="About you"
+              ></textarea>
+            </label>
+            <div class="text-right text-xs text-base-content/60">
+              {{ optionalForm.value.description?.length || 0 }}/1000
+            </div>
+          </form>
+
+          <app-image-upload
+            actionLabel="Upload"
+            [loading]="false"
+            [disabled]="stagedPhotos().length >= maxPhotos"
+            (uploadFile)="onUploadImage($event)"
+          />
+
+          @if (stagedPhotos().length > 0) {
+            <div class="carousel carousel-center rounded-box gap-3 bg-base-200 p-3">
+              @for (photo of stagedPhotos(); track photo.previewUrl; let index = $index) {
+                <div class="carousel-item relative w-40">
+                  <img
+                    [src]="photo.previewUrl"
+                    alt="Selected profile photo"
+                    class="aspect-square w-full rounded-lg object-cover"
+                  />
+                  <button
+                    (click)="removePhoto(index)"
+                    type="button"
+                    class="btn btn-circle btn-xs absolute right-2 top-2"
+                    aria-label="Remove photo"
+                  >
+                    ×
+                  </button>
+                </div>
+              }
+            </div>
+            <div class="text-right text-xs text-base-content/60">
+              {{ stagedPhotos().length }}/{{ maxPhotos }} photos
+            </div>
+          }
+
+          <div class="flex justify-between gap-3">
+            <button (click)="prevStep()" type="button" class="btn">Back</button>
+            <button
+              (click)="finishRegistration()"
+              [disabled]="registerLoading() || optionalForm.invalid"
+              class="btn btn-primary"
+              type="button"
+            >
+              @if (registerLoading()) {
+                <span class="loading loading-spinner"></span>
+              }
+              Register
+            </button>
+          </div>
+        </div>
+      }
+
+      @if (validationErrors().length > 0) {
+        <div class="alert alert-error items-start">
+          <ul class="list-disc pl-5">
+            @for (error of validationErrors(); track $index) {
+              <li>{{ error }}</li>
+            }
+          </ul>
+        </div>
+      }
     </div>
-  }
+  </div>
 </div>
