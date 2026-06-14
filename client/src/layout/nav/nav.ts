@@ -40,6 +40,10 @@ export class Nav implements OnInit {
     if (elem) elem.blur();
   }
 
+  homeLink() {
+    return this.accountService.currentUser() ? '/members' : '/';
+  }
+
   login() {
     this.loading.set(true);
     console.log(this.creds);

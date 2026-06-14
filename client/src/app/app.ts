@@ -10,4 +10,9 @@ import { Router, RouterOutlet } from '@angular/router';
 })
 export class App {
   protected router = inject(Router);
+
+  protected isPublicLandingRoute() {
+    const path = this.router.url.split('?')[0];
+    return path === '/' || path === '/register';
+  }
 }

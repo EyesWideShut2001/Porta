@@ -2,7 +2,7 @@
   <div class="flex align-middle items-center px-10 mx-auto gap-6">
     <div class="text-white">
       <a
-        routerLink="/"
+        [routerLink]="homeLink()"
         routerLinkActive="text-warning"
         [routerLinkActiveOptions]="{ exact: true }"
         class="flex items-center gap-3 max-h-16 border-r-white border-r-2 pr-6"
@@ -36,7 +36,6 @@
           >Admin</a
         >
       }
-      <a routerLink="/errors" routerLinkActive="text-warning">Errors</a>
     </nav>
 
     @if (busyService.busyRequestCount() > 0) {

@@ -1,9 +1,9 @@
 <app-nav />
 
 <div
-  [class.mt-24]="router.url !== '/'"
-  [class.container]="router.url !== '/'"
-  [class.mx-auto]="router.url !== '/'"
+  [class.mt-24]="!isPublicLandingRoute()"
+  [class.container]="!isPublicLandingRoute()"
+  [class.mx-auto]="!isPublicLandingRoute()"
 >
   <router-outlet />
 </div>
