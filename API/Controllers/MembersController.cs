@@ -16,6 +16,9 @@ namespace API.Controllers
     [Authorize]
     public class MembersController(IUnitOfWork uow, IPhotoService photoService) : BaseApiController
     {
+        private const int MinPhotos = 2;
+        private const int MaxPhotos = 8;
+
         [HttpGet]
         public async Task<ActionResult<IReadOnlyList<Member>>> GetMembers([FromQuery] MemberParams memberParams)
         {
@@ -63,11 +66,24 @@ namespace API.Controllers
         }
 
         [HttpPost("add-photo")]
-        public async Task<ActionResult<Photo>> AddPhoto([FromForm] IFormFile file)
+        [Consumes("multipart/form-data")]
+        public async Task<ActionResult<Photo>> AddPhoto([FromForm] IFormFile? file)
         {
+            if (file == null || file.Length == 0) return BadRequest("Select a photo to upload");
+
+            if (!file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest("Uploaded file must be an image");
+            }
+
             var member = await uow.MemberRepository.GetMemberForUpdate(User.GetMemberId());
 
             if (member == null) return BadRequest("Cannot update member!");
+
+            if (member.Photos.Count >= MaxPhotos)
+            {
+                return BadRequest($"You can upload up to {MaxPhotos} photos");
+            }
 
             var result = await photoService.UploadPhotoAsync(file);
 
@@ -127,6 +143,11 @@ namespace API.Controllers
             if (photo == null || photo.Url == member.ImageUrl)
             {
                 return BadRequest("This photo cannot be deleted!");
+            }
+
+            if (member.Photos.Count <= MinPhotos)
+            {
+                return BadRequest($"You must keep at least {MinPhotos} photos");
             }
 
             if (photo.PublicId != null)

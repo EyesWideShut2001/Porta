@@ -1,13 +1,8 @@
 using System;
-using System.Security.Cryptography;
-using System.Text;
-using API.Data;
 using API.DTOs;
 using API.Entities;
 using API.Extensions;
 using API.Interfaces;
-using API.Services;
-using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -18,30 +13,64 @@ namespace API.Controllers;
 public class AccountController(
     UserManager<AppUser> userManager,
     ITokenService tokenService,
+    IPhotoService photoService,
     IWebHostEnvironment env) : BaseApiController
 {
 
     [HttpPost("register")]  // api/account/register
-    public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<UserDto>> Register([FromForm] RegisterDto registerDto)
     {
         var email = registerDto.Email.Trim();
         var displayName = registerDto.DisplayName.Trim();
         var city = registerDto.City.Trim();
         var country = registerDto.Country.Trim();
+        var description = string.IsNullOrWhiteSpace(registerDto.Description)
+            ? null
+            : registerDto.Description.Trim();
+        var uploadedPhotos = new List<Photo>();
+
+        foreach (var file in registerDto.Photos)
+        {
+            var uploadResult = await photoService.UploadPhotoAsync(file);
+
+            if (uploadResult.Error != null)
+            {
+                await DeleteUploadedPhotos(uploadedPhotos);
+                ModelState.AddModelError(nameof(RegisterDto.Photos), uploadResult.Error.Message);
+                return ValidationProblem();
+            }
+
+            if (uploadResult.SecureUrl == null)
+            {
+                await DeleteUploadedPhotos(uploadedPhotos);
+                ModelState.AddModelError(nameof(RegisterDto.Photos), "Problem uploading photo");
+                return ValidationProblem();
+            }
+
+            uploadedPhotos.Add(new Photo
+            {
+                Url = uploadResult.SecureUrl.AbsoluteUri,
+                PublicId = uploadResult.PublicId
+            });
+        }
 
         var user = new AppUser
         {
             DisplayName = displayName,
             Email = email,
             UserName = email,
+            ImageUrl = uploadedPhotos[0].Url,
             Member = new Member
             {
                 DisplayName = displayName,
                 Gender = registerDto.Gender.Trim().ToLowerInvariant(),
                 City = city,
                 Country = country,
-                DateOfBirth = registerDto.DateOfBirth
-
+                DateOfBirth = registerDto.DateOfBirth,
+                Description = description,
+                ImageUrl = uploadedPhotos[0].Url,
+                Photos = uploadedPhotos
             }
         };
 
@@ -49,15 +78,22 @@ public class AccountController(
 
         if (!result.Succeeded)
         {
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError("identity", error.Description);
-            }
+            await DeleteUploadedPhotos(uploadedPhotos);
+            AddIdentityErrorsToModelState(result.Errors);
 
             return ValidationProblem();
         }
 
         var roleResult = await userManager.AddToRoleAsync(user, "Member");
+
+        if (!roleResult.Succeeded)
+        {
+            await userManager.DeleteAsync(user);
+            await DeleteUploadedPhotos(uploadedPhotos);
+            AddIdentityErrorsToModelState(roleResult.Errors);
+
+            return ValidationProblem();
+        }
 
         await SetRefreshTokenCookie(user);
 
@@ -130,5 +166,22 @@ public class AccountController(
         return Ok();
     }
 
+    private void AddIdentityErrorsToModelState(IEnumerable<IdentityError> errors)
+    {
+        foreach (var error in errors)
+        {
+            ModelState.AddModelError("identity", error.Description);
+        }
+    }
+
+    private async Task DeleteUploadedPhotos(IEnumerable<Photo> photos)
+    {
+        foreach (var photo in photos)
+        {
+            if (photo.PublicId == null) continue;
+
+            await photoService.DeletePhotoAsync(photo.PublicId);
+        }
+    }
 
 }

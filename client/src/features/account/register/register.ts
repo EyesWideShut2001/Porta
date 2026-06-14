@@ -8,15 +8,9 @@ import {
   ValidatorFn,
   Validators,
 } from '@angular/forms';
-import { RegisterCreds } from '../../../types/user';
 import { AccountService } from '../../../core/services/account-service';
-import { TextInput } from '../../../shared/text-input/text-input';
 import { Router } from '@angular/router';
-import { ImageUpload } from '../../../shared/image-upload/image-upload';
-import { MemberService } from '../../../core/services/member-service';
-import { User } from '../../../types/user';
-import { concatMap, finalize, from, Observable, of } from 'rxjs';
-import { Photo } from '../../../types/member';
+import { finalize } from 'rxjs';
 
 type StagedPhoto = {
   file: File;
@@ -25,25 +19,28 @@ type StagedPhoto = {
 
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule, TextInput, ImageUpload],
+  imports: [ReactiveFormsModule],
   templateUrl: './register.html',
   styleUrl: './register.css',
 })
 export class Register implements OnDestroy {
   private accountService = inject(AccountService);
-  private memberService = inject(MemberService);
   private router = inject(Router);
   private fb = inject(FormBuilder);
   cancelRegister = output<boolean>();
-  protected creds = {} as RegisterCreds;
   protected credentialsForm: FormGroup;
   protected profileForm: FormGroup;
-  protected optionalForm: FormGroup;
+  protected detailsForm: FormGroup;
   protected currentStep = signal(1);
   protected validationErrors = signal<string[]>([]);
+  protected photoErrors = signal<string[]>([]);
   protected registerLoading = signal(false);
+  protected isDraggingPhotos = signal(false);
+  protected draggedPhotoIndex = signal<number | null>(null);
+  protected dropTargetPhotoIndex = signal<number | null>(null);
   protected stagedPhotos = signal<StagedPhoto[]>([]);
-  protected readonly maxPhotos = 10;
+  protected readonly minPhotos = 2;
+  protected readonly maxPhotos = 8;
   protected readonly genders = [
     { value: 'male', label: 'Male' },
     { value: 'female', label: 'Female' },
@@ -128,7 +125,7 @@ export class Register implements OnDestroy {
       country: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(80)]],
     }, { validators: this.birthDateValidator() });
 
-    this.optionalForm = this.fb.group({
+    this.detailsForm = this.fb.group({
       description: ['', [Validators.maxLength(1000)]],
     });
 
@@ -196,80 +193,124 @@ export class Register implements OnDestroy {
   }
 
   register() {
-    if (this.profileForm.valid && this.credentialsForm.valid && this.optionalForm.valid) {
-      this.registerLoading.set(true);
-      this.validationErrors.set([]);
-      const { confirmPassword, ...credentials } = this.credentialsForm.value;
-      const formData = {
-        ...credentials,
-        gender: this.profileForm.value.gender,
-        dateOfBirth: this.getDateOfBirth(),
-        city: this.profileForm.value.city,
-        country: this.profileForm.value.country,
-      };
+    this.credentialsForm.markAllAsTouched();
+    this.profileForm.markAllAsTouched();
+    this.detailsForm.markAllAsTouched();
 
-      this.accountService.register(formData).subscribe({
-        next: () => this.applyOptionalDetails(),
-        error: (error) => {
-          console.log(error);
-          this.registerLoading.set(false);
-          this.validationErrors.set(error);
-        },
-      });
+    if (!this.hasRequiredPhotos()) {
+      this.photoErrors.set([`Upload at least ${this.minPhotos} photos to register.`]);
+    }
+
+    if (
+      this.profileForm.invalid ||
+      this.credentialsForm.invalid ||
+      this.detailsForm.invalid ||
+      !this.hasRequiredPhotos()
+    ) {
+      return;
+    }
+
+    this.registerLoading.set(true);
+    this.validationErrors.set([]);
+    this.photoErrors.set([]);
+
+    this.accountService.register(this.buildRegistrationFormData()).pipe(
+      finalize(() => this.registerLoading.set(false)),
+    ).subscribe({
+      next: () => this.router.navigateByUrl('/members'),
+      error: (error) => {
+        console.log(error);
+        this.validationErrors.set(Array.isArray(error) ? error : [error]);
+      },
+    });
+  }
+
+  onPhotoDragOver(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (this.stagedPhotos().length < this.maxPhotos) {
+      this.isDraggingPhotos.set(true);
     }
   }
 
-  onUploadImage(file: File) {
-    if (this.stagedPhotos().length >= this.maxPhotos) return;
+  onPhotoDragLeave(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDraggingPhotos.set(false);
+  }
 
-    this.stagedPhotos.update((photos) => [
-      ...photos,
-      {
-        file,
-        previewUrl: URL.createObjectURL(file),
-      },
-    ]);
+  onPhotoDrop(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDraggingPhotos.set(false);
+
+    if (event.dataTransfer?.files.length) {
+      this.stagePhotos(Array.from(event.dataTransfer.files));
+    }
+  }
+
+  onPhotoSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.stagePhotos(Array.from(input.files ?? []));
+    input.value = '';
   }
 
   removePhoto(index: number) {
     const photo = this.stagedPhotos()[index];
     if (photo) URL.revokeObjectURL(photo.previewUrl);
     this.stagedPhotos.update((photos) => photos.filter((_, photoIndex) => photoIndex !== index));
+
+    if (this.hasRequiredPhotos()) {
+      this.photoErrors.set([]);
+    }
+  }
+
+  movePhoto(index: number, direction: -1 | 1) {
+    this.reorderPhoto(index, index + direction);
+  }
+
+  onStagedPhotoDragStart(event: DragEvent, index: number) {
+    this.draggedPhotoIndex.set(index);
+    this.dropTargetPhotoIndex.set(index);
+
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', index.toString());
+    }
+  }
+
+  onStagedPhotoDragOver(event: DragEvent, index: number) {
+    const draggedIndex = this.draggedPhotoIndex();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    this.dropTargetPhotoIndex.set(index);
+
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+
+  onStagedPhotoDrop(event: DragEvent, index: number) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const draggedIndex = this.draggedPhotoIndex();
+    if (draggedIndex !== null) {
+      this.reorderPhoto(draggedIndex, index);
+    }
+
+    this.clearStagedPhotoDragState();
+  }
+
+  onStagedPhotoDragEnd() {
+    this.clearStagedPhotoDragState();
   }
 
   finishRegistration() {
     this.register();
-  }
-
-  private applyOptionalDetails() {
-    const description = this.optionalForm.value.description?.trim();
-    const updateProfile$: Observable<unknown> = description
-      ? this.memberService.updateMember({ description })
-      : of(null);
-    const uploadPhoto$: Observable<Photo | null> = this.stagedPhotos().length > 0
-      ? from(this.stagedPhotos()).pipe(
-          concatMap((photo) => this.memberService.uploadPhoto(photo.file)),
-        )
-      : of(null);
-
-    updateProfile$.pipe(
-      concatMap(() => uploadPhoto$),
-      finalize(() => this.registerLoading.set(false)),
-    ).subscribe({
-      next: (photo: Photo | null) => {
-        if (!photo) return;
-
-        const currentUser = this.accountService.currentUser();
-
-        if (currentUser && !currentUser.imageUrl) {
-          this.accountService.currentUser.set({ ...currentUser, imageUrl: photo.url } as User);
-        }
-      },
-      complete: () => this.router.navigateByUrl('/members'),
-      error: (error: any) => {
-        this.validationErrors.set(Array.isArray(error) ? error : [error]);
-      },
-    });
   }
 
   cancel() {
@@ -292,5 +333,92 @@ export class Register implements OnDestroy {
       month.toString().padStart(2, '0'),
       day.toString().padStart(2, '0'),
     ].join('-');
+  }
+
+  private buildRegistrationFormData() {
+    const formData = new FormData();
+    const description = this.detailsForm.value.description?.trim();
+
+    formData.append('email', this.credentialsForm.value.email);
+    formData.append('displayName', this.credentialsForm.value.displayName);
+    formData.append('password', this.credentialsForm.value.password);
+    formData.append('gender', this.profileForm.value.gender);
+    formData.append('dateOfBirth', this.getDateOfBirth());
+    formData.append('city', this.profileForm.value.city);
+    formData.append('country', this.profileForm.value.country);
+
+    if (description) {
+      formData.append('description', description);
+    }
+
+    for (const photo of this.stagedPhotos()) {
+      formData.append('photos', photo.file, photo.file.name);
+    }
+
+    return formData;
+  }
+
+  private hasRequiredPhotos() {
+    const photoCount = this.stagedPhotos().length;
+    return photoCount >= this.minPhotos && photoCount <= this.maxPhotos;
+  }
+
+  private reorderPhoto(fromIndex: number, toIndex: number) {
+    if (
+      fromIndex === toIndex ||
+      fromIndex < 0 ||
+      toIndex < 0 ||
+      fromIndex >= this.stagedPhotos().length ||
+      toIndex >= this.stagedPhotos().length
+    ) {
+      return;
+    }
+
+    this.stagedPhotos.update((photos) => {
+      const nextPhotos = [...photos];
+      const [photo] = nextPhotos.splice(fromIndex, 1);
+      nextPhotos.splice(toIndex, 0, photo);
+      return nextPhotos;
+    });
+  }
+
+  private clearStagedPhotoDragState() {
+    this.draggedPhotoIndex.set(null);
+    this.dropTargetPhotoIndex.set(null);
+  }
+
+  private stagePhotos(files: File[]) {
+    if (files.length === 0 || this.stagedPhotos().length >= this.maxPhotos) return;
+
+    const availableSlots = this.maxPhotos - this.stagedPhotos().length;
+    const selectedPhotos: StagedPhoto[] = [];
+    const errors: string[] = [];
+
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) {
+        errors.push(`${file.name} is not an image file.`);
+        continue;
+      }
+
+      if (selectedPhotos.length >= availableSlots) {
+        errors.push(`You can upload up to ${this.maxPhotos} photos.`);
+        break;
+      }
+
+      selectedPhotos.push({
+        file,
+        previewUrl: URL.createObjectURL(file),
+      });
+    }
+
+    if (selectedPhotos.length > 0) {
+      this.stagedPhotos.update((photos) => [...photos, ...selectedPhotos]);
+    }
+
+    if (this.hasRequiredPhotos() && errors.length === 0) {
+      this.photoErrors.set([]);
+    } else {
+      this.photoErrors.set(errors);
+    }
   }
 }

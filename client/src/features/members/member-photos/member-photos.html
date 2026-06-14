@@ -15,7 +15,7 @@
               />
 
               <app-delete-button
-                [disabled]="photo.url === memberService.member()?.imageUrl"
+                [disabled]="photo.url === memberService.member()?.imageUrl || photos.length <= minPhotos"
                 (clickEvent)="deletePhoto(photo.id)"
                 class="absolute top-1 left-1"
               />
@@ -28,5 +28,14 @@
     }
   }
 } @else {
-  <app-image-upload (uploadFile)="onUploadImage($event)" [loading]="loading()" />
+  <div class="flex flex-col gap-3">
+    <app-image-upload
+      (uploadFile)="onUploadImage($event)"
+      [loading]="loading()"
+      [disabled]="photos().length >= maxPhotos"
+    />
+    @if (photos().length >= maxPhotos) {
+      <p class="text-sm text-base-content/60">You can upload up to {{ maxPhotos }} photos.</p>
+    }
+  </div>
 }

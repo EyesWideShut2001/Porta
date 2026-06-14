@@ -3,61 +3,114 @@
     <div class="card-body gap-6 p-6 md:p-8">
       <h1 class="text-center text-3xl font-semibold">Sign up</h1>
 
-      <ul class="timeline timeline-horizontal justify-center gap-8">
-        <li class="px-2">
-          <div class="timeline-middle">
-            <div class="badge badge-primary badge-sm">1</div>
-          </div>
-          <div class="timeline-end text-sm">Account</div>
-          <hr [class.bg-primary]="currentStep() >= 2" />
-        </li>
-        <li class="px-2">
-          <hr [class.bg-primary]="currentStep() >= 2" />
-          <div class="timeline-middle">
-            <div class="badge badge-sm" [class.badge-primary]="currentStep() >= 2">2</div>
-          </div>
-          <div class="timeline-end text-sm">Profile</div>
-          <hr [class.bg-primary]="currentStep() >= 3" />
-        </li>
-        <li class="px-2">
-          <hr [class.bg-primary]="currentStep() >= 3" />
-          <div class="timeline-middle">
-            <div class="badge badge-sm" [class.badge-primary]="currentStep() >= 3">3</div>
-          </div>
-          <div class="timeline-end text-sm">Optional</div>
-        </li>
-      </ul>
-
       @if (currentStep() === 1) {
         <form [formGroup]="credentialsForm" class="flex flex-col gap-4">
-          <app-text-input
-            label="Email"
-            autocomplete="email"
-            maxlength="254"
-            formControlName="email"
-          />
-          <app-text-input
-            label="Display name"
-            autocomplete="name"
-            maxlength="50"
-            formControlName="displayName"
-          />
-          <app-text-input
-            label="Password"
-            type="password"
-            autocomplete="new-password"
-            minlength="8"
-            maxlength="64"
-            formControlName="password"
-          />
-          <app-text-input
-            label="Confirm password"
-            type="password"
-            autocomplete="new-password"
-            minlength="8"
-            maxlength="64"
-            formControlName="confirmPassword"
-          />
+          <h2 class="text-xl font-semibold">Account</h2>
+
+          <label class="floating-label text-left">
+            <span>Email</span>
+            <input
+              formControlName="email"
+              type="email"
+              autocomplete="email"
+              maxlength="254"
+              class="input w-full"
+              placeholder="Email"
+              [class.input-error]="
+                credentialsForm.controls['email'].invalid &&
+                credentialsForm.controls['email'].touched
+              "
+            />
+            @if (credentialsForm.controls['email'].hasError('required') && credentialsForm.controls['email'].touched) {
+              <div class="validation-hint text-error text-xs">Email is required</div>
+            }
+            @if (credentialsForm.controls['email'].hasError('email') && credentialsForm.controls['email'].touched) {
+              <div class="validation-hint text-error text-xs">Invalid email address</div>
+            }
+            @if (credentialsForm.controls['email'].hasError('maxlength') && credentialsForm.controls['email'].touched) {
+              <div class="validation-hint text-error text-xs">Email must be at most 254 characters</div>
+            }
+          </label>
+
+          <label class="floating-label text-left">
+            <span>Display name</span>
+            <input
+              formControlName="displayName"
+              type="text"
+              autocomplete="name"
+              maxlength="50"
+              class="input w-full"
+              placeholder="Display name"
+              [class.input-error]="
+                credentialsForm.controls['displayName'].invalid &&
+                credentialsForm.controls['displayName'].touched
+              "
+            />
+            @if (credentialsForm.controls['displayName'].hasError('required') && credentialsForm.controls['displayName'].touched) {
+              <div class="validation-hint text-error text-xs">Display name is required</div>
+            }
+            @if (credentialsForm.controls['displayName'].hasError('minlength') && credentialsForm.controls['displayName'].touched) {
+              <div class="validation-hint text-error text-xs">Display name must be at least 2 characters</div>
+            }
+            @if (credentialsForm.controls['displayName'].hasError('maxlength') && credentialsForm.controls['displayName'].touched) {
+              <div class="validation-hint text-error text-xs">Display name must be at most 50 characters</div>
+            }
+          </label>
+
+          <label class="floating-label text-left">
+            <span>Password</span>
+            <input
+              formControlName="password"
+              type="password"
+              autocomplete="new-password"
+              minlength="8"
+              maxlength="64"
+              class="input w-full"
+              placeholder="Password"
+              [class.input-error]="
+                credentialsForm.controls['password'].invalid &&
+                credentialsForm.controls['password'].touched
+              "
+            />
+            @if (credentialsForm.controls['password'].hasError('required') && credentialsForm.controls['password'].touched) {
+              <div class="validation-hint text-error text-xs">Password is required</div>
+            }
+            @if (credentialsForm.controls['password'].hasError('minlength') && credentialsForm.controls['password'].touched) {
+              <div class="validation-hint text-error text-xs">Password must be at least 8 characters</div>
+            }
+            @if (credentialsForm.controls['password'].hasError('maxlength') && credentialsForm.controls['password'].touched) {
+              <div class="validation-hint text-error text-xs">Password must be at most 64 characters</div>
+            }
+            @if (credentialsForm.controls['password'].hasError('pattern') && credentialsForm.controls['password'].touched) {
+              <div class="validation-hint text-error text-xs">
+                Password must include uppercase, lowercase, and a number
+              </div>
+            }
+          </label>
+
+          <label class="floating-label text-left">
+            <span>Confirm password</span>
+            <input
+              formControlName="confirmPassword"
+              type="password"
+              autocomplete="new-password"
+              minlength="8"
+              maxlength="64"
+              class="input w-full"
+              placeholder="Confirm password"
+              [class.input-error]="
+                credentialsForm.controls['confirmPassword'].invalid &&
+                credentialsForm.controls['confirmPassword'].touched
+              "
+            />
+            @if (credentialsForm.controls['confirmPassword'].hasError('required') && credentialsForm.controls['confirmPassword'].touched) {
+              <div class="validation-hint text-error text-xs">Confirm password is required</div>
+            }
+            @if (credentialsForm.controls['confirmPassword'].hasError('passwordMismatch') && credentialsForm.controls['confirmPassword'].touched) {
+              <div class="validation-hint text-error text-xs">Passwords do not match</div>
+            }
+          </label>
+
           <div class="flex justify-end gap-3">
             <button (click)="cancel()" type="button" class="btn btn-ghost">Cancel</button>
             <button
@@ -74,6 +127,8 @@
 
       @if (currentStep() === 2) {
         <form [formGroup]="profileForm" class="flex flex-col gap-4">
+          <h2 class="text-xl font-semibold">Profile</h2>
+
           <fieldset class="fieldset">
             <legend class="fieldset-legend">Gender</legend>
             <select
@@ -88,6 +143,9 @@
                 <option [value]="gender.value">{{ gender.label }}</option>
               }
             </select>
+            @if (profileForm.controls['gender'].hasError('required') && profileForm.controls['gender'].touched) {
+              <div class="validation-hint text-error text-xs">Gender is required</div>
+            }
           </fieldset>
 
           <fieldset class="fieldset">
@@ -163,12 +221,29 @@
             }
           </fieldset>
 
-          <app-text-input
-            label="City"
-            autocomplete="address-level2"
-            maxlength="80"
-            formControlName="city"
-          />
+          <label class="floating-label text-left">
+            <span>City</span>
+            <input
+              formControlName="city"
+              type="text"
+              autocomplete="address-level2"
+              maxlength="80"
+              class="input w-full"
+              placeholder="City"
+              [class.input-error]="
+                profileForm.controls['city'].invalid && profileForm.controls['city'].touched
+              "
+            />
+            @if (profileForm.controls['city'].hasError('required') && profileForm.controls['city'].touched) {
+              <div class="validation-hint text-error text-xs">City is required</div>
+            }
+            @if (profileForm.controls['city'].hasError('minlength') && profileForm.controls['city'].touched) {
+              <div class="validation-hint text-error text-xs">City must be at least 2 characters</div>
+            }
+            @if (profileForm.controls['city'].hasError('maxlength') && profileForm.controls['city'].touched) {
+              <div class="validation-hint text-error text-xs">City must be at most 80 characters</div>
+            }
+          </label>
 
           <fieldset class="fieldset">
             <legend class="fieldset-legend">Country</legend>
@@ -185,6 +260,9 @@
                 <option [value]="country.value">{{ country.label }}</option>
               }
             </select>
+            @if (profileForm.controls['country'].hasError('required') && profileForm.controls['country'].touched) {
+              <div class="validation-hint text-error text-xs">Country is required</div>
+            }
           </fieldset>
 
           <div class="flex justify-between gap-3">
@@ -203,7 +281,9 @@
 
       @if (currentStep() === 3) {
         <div class="flex flex-col gap-5">
-          <form [formGroup]="optionalForm" class="flex flex-col gap-3">
+          <form [formGroup]="detailsForm" class="flex flex-col gap-3">
+            <h2 class="text-xl font-semibold">Profile photos</h2>
+
             <label class="floating-label">
               <span>About you</span>
               <textarea
@@ -211,36 +291,71 @@
                 maxlength="1000"
                 class="textarea min-h-32 w-full"
                 placeholder="About you"
+                [class.textarea-error]="
+                  detailsForm.controls['description'].invalid &&
+                  detailsForm.controls['description'].touched
+                "
               ></textarea>
             </label>
             <div class="text-right text-xs text-base-content/60">
-              {{ optionalForm.value.description?.length || 0 }}/1000
+              {{ detailsForm.value.description?.length || 0 }}/1000
             </div>
           </form>
 
-          <app-image-upload
-            actionLabel="Upload"
-            [loading]="false"
-            [disabled]="stagedPhotos().length >= maxPhotos"
-            (uploadFile)="onUploadImage($event)"
-          />
+          <div
+            (dragover)="onPhotoDragOver($event)"
+            (dragleave)="onPhotoDragLeave($event)"
+            (drop)="onPhotoDrop($event)"
+            class="rounded-lg border border-dashed border-base-300 bg-base-200/60 p-5 transition-colors"
+            [class.border-primary]="isDraggingPhotos()"
+            [class.bg-primary/5]="isDraggingPhotos()"
+            [class.opacity-60]="stagedPhotos().length >= maxPhotos"
+          >
+            <label class="fieldset w-full">
+              <span class="fieldset-legend">Upload at least {{ minPhotos }} photos</span>
+              <input
+                (change)="onPhotoSelected($event)"
+                type="file"
+                accept="image/*"
+                multiple
+                class="file-input w-full"
+                [disabled]="stagedPhotos().length >= maxPhotos"
+              />
+              <span class="fieldset-label">
+                Image files, including JPEG, PNG, and WebP. You can add up to {{ maxPhotos }} photos.
+              </span>
+            </label>
+          </div>
 
           @if (stagedPhotos().length > 0) {
-            <div class="carousel carousel-center rounded-box gap-3 bg-base-200 p-3">
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               @for (photo of stagedPhotos(); track photo.previewUrl; let index = $index) {
-                <div class="carousel-item relative w-40">
+                <div
+                  class="relative overflow-hidden rounded-lg border border-base-300 bg-base-100 transition"
+                  [class.border-primary]="dropTargetPhotoIndex() === index"
+                  [class.opacity-60]="draggedPhotoIndex() === index"
+                  [class.ring-2]="dropTargetPhotoIndex() === index"
+                  [class.ring-primary]="dropTargetPhotoIndex() === index"
+                  draggable="true"
+                  (dragstart)="onStagedPhotoDragStart($event, index)"
+                  (dragover)="onStagedPhotoDragOver($event, index)"
+                  (drop)="onStagedPhotoDrop($event, index)"
+                  (dragend)="onStagedPhotoDragEnd()"
+                  [attr.aria-label]="'Selected profile photo ' + (index + 1)"
+                >
                   <img
                     [src]="photo.previewUrl"
                     alt="Selected profile photo"
-                    class="aspect-square w-full rounded-lg object-cover"
+                    draggable="false"
+                    class="aspect-square w-full object-cover"
                   />
                   <button
                     (click)="removePhoto(index)"
                     type="button"
-                    class="btn btn-circle btn-xs absolute right-2 top-2"
+                    class="btn btn-square btn-error btn-soft btn-xs absolute right-2 top-2"
                     aria-label="Remove photo"
                   >
-                    ×
+                    <span aria-hidden="true">&times;</span>
                   </button>
                 </div>
               }
@@ -250,11 +365,26 @@
             </div>
           }
 
+          @if (photoErrors().length > 0) {
+            <div class="alert alert-error items-start">
+              <ul class="list-disc pl-5">
+                @for (error of photoErrors(); track $index) {
+                  <li>{{ error }}</li>
+                }
+              </ul>
+            </div>
+          }
+
           <div class="flex justify-between gap-3">
             <button (click)="prevStep()" type="button" class="btn">Back</button>
             <button
               (click)="finishRegistration()"
-              [disabled]="registerLoading() || optionalForm.invalid"
+              [disabled]="
+                registerLoading() ||
+                detailsForm.invalid ||
+                stagedPhotos().length < minPhotos ||
+                stagedPhotos().length > maxPhotos
+              "
               class="btn btn-primary"
               type="button"
             >

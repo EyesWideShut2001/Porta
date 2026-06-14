@@ -1,10 +1,14 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace API.DTOs;
 
 public class RegisterDto : IValidatableObject
 {
+    private const int MinPhotos = 2;
+    private const int MaxPhotos = 8;
+
     [Required]
     [StringLength(50, MinimumLength = 2)]
     public string DisplayName { get; set; } = "";
@@ -30,6 +34,11 @@ public class RegisterDto : IValidatableObject
     [StringLength(80, MinimumLength = 2)]
     public string Country { get; set; } = string.Empty;
     [Required] public DateOnly DateOfBirth { get; set; }
+
+    [StringLength(1000)]
+    public string? Description { get; set; }
+
+    public List<IFormFile> Photos { get; set; } = [];
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
@@ -57,6 +66,30 @@ public class RegisterDto : IValidatableObject
             yield return new ValidationResult(
                 "Enter a realistic date of birth",
                 [nameof(DateOfBirth)]);
+        }
+
+        if (Photos.Count < MinPhotos || Photos.Count > MaxPhotos)
+        {
+            yield return new ValidationResult(
+                $"Registration requires between {MinPhotos} and {MaxPhotos} photos",
+                [nameof(Photos)]);
+        }
+
+        foreach (var photo in Photos)
+        {
+            if (photo.Length == 0)
+            {
+                yield return new ValidationResult(
+                    "Uploaded photos cannot be empty",
+                    [nameof(Photos)]);
+            }
+
+            if (!photo.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            {
+                yield return new ValidationResult(
+                    "Uploaded photos must be image files",
+                    [nameof(Photos)]);
+            }
         }
     }
 }

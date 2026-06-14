@@ -20,6 +20,8 @@ export class MemberPhotos implements OnInit {
   private route = inject(ActivatedRoute);
   protected photos = signal<Photo[]>([]);
   protected loading = signal(false);
+  protected readonly minPhotos = 2;
+  protected readonly maxPhotos = 8;
 
   ngOnInit(): void {
     const memberId = this.route.parent?.snapshot.paramMap.get('id');
@@ -31,6 +33,8 @@ export class MemberPhotos implements OnInit {
   }
 
   onUploadImage(file: File) {
+    if (this.photos().length >= this.maxPhotos) return;
+
     this.loading.set(true);
     this.memberService.uploadPhoto(file).subscribe({
       next: (photo) => {
@@ -57,6 +61,8 @@ export class MemberPhotos implements OnInit {
   }
 
   deletePhoto(photoId: number) {
+    if (this.photos().length <= this.minPhotos) return;
+
     this.memberService.deletePhoto(photoId).subscribe({
       next: () => {
         this.photos.update((photos) => photos.filter((x) => x.id !== photoId));
