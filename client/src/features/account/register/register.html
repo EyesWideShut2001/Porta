@@ -245,25 +245,13 @@
             }
           </label>
 
-          <fieldset class="fieldset">
-            <legend class="fieldset-legend">Country</legend>
-            <select
-              formControlName="country"
-              autocomplete="country-name"
-              class="select w-full"
-              [class.select-error]="
-                profileForm.controls['country'].invalid && profileForm.controls['country'].touched
-              "
-            >
-              <option value="" disabled>Select country</option>
-              @for (country of countries; track country.value) {
-                <option [value]="country.value">{{ country.label }}</option>
-              }
-            </select>
-            @if (profileForm.controls['country'].hasError('required') && profileForm.controls['country'].touched) {
-              <div class="validation-hint text-error text-xs">Country is required</div>
-            }
-          </fieldset>
+          <app-country-select
+            formControlName="country"
+            [invalid]="profileForm.controls['country'].invalid && profileForm.controls['country'].touched"
+          />
+          @if (profileForm.controls['country'].hasError('required') && profileForm.controls['country'].touched) {
+            <div class="validation-hint text-error text-xs">Country is required</div>
+          }
 
           <div class="flex justify-between gap-3">
             <button (click)="prevStep()" type="button" class="btn">Back</button>

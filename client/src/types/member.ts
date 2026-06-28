@@ -16,6 +16,7 @@ export type Photo = {
   url: string;
   publicId?: string;
   memberId: string;
+  displayOrder: number;
 };
 
 export type EditableMember = {

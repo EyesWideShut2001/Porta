@@ -51,7 +51,8 @@ public class AccountController(
             uploadedPhotos.Add(new Photo
             {
                 Url = uploadResult.SecureUrl.AbsoluteUri,
-                PublicId = uploadResult.PublicId
+                PublicId = uploadResult.PublicId,
+                DisplayOrder = uploadedPhotos.Count
             });
         }
 

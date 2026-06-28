@@ -11,6 +11,7 @@ import {
 import { AccountService } from '../../../core/services/account-service';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
+import { CountrySelect } from '../../../shared/country-select/country-select';
 
 type StagedPhoto = {
   file: File;
@@ -19,7 +20,7 @@ type StagedPhoto = {
 
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, CountrySelect],
   templateUrl: './register.html',
   styleUrl: './register.css',
 })
@@ -45,26 +46,6 @@ export class Register implements OnDestroy {
     { value: 'male', label: 'Male' },
     { value: 'female', label: 'Female' },
     { value: 'other', label: 'Other' },
-  ];
-  protected readonly countries = [
-    { value: 'United States', label: '🇺🇸 United States' },
-    { value: 'Romania', label: '🇷🇴 Romania' },
-    { value: 'United Kingdom', label: '🇬🇧 United Kingdom' },
-    { value: 'Canada', label: '🇨🇦 Canada' },
-    { value: 'Germany', label: '🇩🇪 Germany' },
-    { value: 'France', label: '🇫🇷 France' },
-    { value: 'Spain', label: '🇪🇸 Spain' },
-    { value: 'Italy', label: '🇮🇹 Italy' },
-    { value: 'Netherlands', label: '🇳🇱 Netherlands' },
-    { value: 'Poland', label: '🇵🇱 Poland' },
-    { value: 'Ukraine', label: '🇺🇦 Ukraine' },
-    { value: 'Turkey', label: '🇹🇷 Turkey' },
-    { value: 'Brazil', label: '🇧🇷 Brazil' },
-    { value: 'Mexico', label: '🇲🇽 Mexico' },
-    { value: 'India', label: '🇮🇳 India' },
-    { value: 'Japan', label: '🇯🇵 Japan' },
-    { value: 'South Korea', label: '🇰🇷 South Korea' },
-    { value: 'Australia', label: '🇦🇺 Australia' },
   ];
   protected readonly months = [
     { value: 1, label: 'January' },

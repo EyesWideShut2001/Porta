@@ -1,41 +1,154 @@
-@if (!memberService.editMode()) {
-  @if (photos(); as photos) {
-    @if (photos.length > 0) {
-      <div class="grid grid-cols-4 auto-rows-min gap-3 p-5 h-[65vh] overflow-auto">
-        @for (photo of photos; track photo.id) {
-          <div class="relative">
-            <img src="{{ photo.url }}" alt="photo of member" class="w-full rounded-lg" />
+<input
+  #photoInput
+  (change)="onPhotoSelected($event)"
+  type="file"
+  accept="image/*"
+  multiple
+  class="hidden"
+/>
 
-            @if (accountService.currentUser()?.id === memberService.member()?.id) {
-              <app-star-button
-                [disabled]="photo.url === memberService.member()?.imageUrl"
-                [selected]="photo.url === memberService.member()?.imageUrl"
-                (clickEvent)="setMainPhoto(photo)"
-                class="absolute top-1 right-1"
-              />
+<div class="flex h-[65vh] flex-col gap-4 overflow-auto p-5">
+  @if (photoErrors().length > 0) {
+    <div role="alert" class="alert alert-error items-start">
+      <ul class="list-disc pl-5">
+        @for (error of photoErrors(); track $index) {
+          <li>{{ error }}</li>
+        }
+      </ul>
+    </div>
+  }
 
-              <app-delete-button
-                [disabled]="photo.url === memberService.member()?.imageUrl || photos.length <= minPhotos"
-                (clickEvent)="deletePhoto(photo.id)"
-                class="absolute top-1 left-1"
+  @if (!editingPhotos()) {
+    @if (isCurrentUser()) {
+      <div class="flex justify-end">
+        <button
+          (click)="enterPhotoEditMode()"
+          type="button"
+          class="btn btn-outline btn-primary btn-sm"
+          [disabled]="loading()"
+        >
+          Edit photos
+        </button>
+      </div>
+    }
+
+    @if (photos(); as photos) {
+      @if (photos.length > 0) {
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+          @for (photo of photos; track photo.id; let index = $index) {
+            <div class="relative overflow-hidden rounded-lg border border-base-300 bg-base-100">
+              <img
+                src="{{ photo.url }}"
+                alt="photo of member"
+                draggable="false"
+                class="aspect-square w-full object-cover"
               />
-            }
-          </div>
+              @if (index === 0) {
+                <span class="badge badge-primary badge-sm absolute left-2 top-2">Cover</span>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="text-center text-base-content/60">No photos available</p>
+      }
+    }
+  } @else {
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="text-sm text-base-content/60">
+        {{ draftPhotos().length }}/{{ maxPhotos }} photos
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <button
+          (click)="cancelPhotoEditMode()"
+          type="button"
+          class="btn btn-ghost btn-sm"
+          [disabled]="loading()"
+        >
+          Cancel
+        </button>
+        <button
+          (click)="savePhotoChanges()"
+          type="button"
+          class="btn btn-primary btn-sm"
+          [disabled]="loading() || !hasDraftChanges()"
+        >
+          @if (loading()) {
+            <span class="loading loading-spinner"></span>
+          }
+          Save changes
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+      @for (photo of draftPhotos(); track photo.draftId; let index = $index) {
+        <div
+          class="relative overflow-hidden rounded-lg border border-base-300 bg-base-100 transition"
+          [class.border-primary]="dropTargetDraftIndex() === index"
+          [class.opacity-60]="draggedDraftIndex() === index"
+          [class.ring-2]="dropTargetDraftIndex() === index"
+          [class.ring-primary]="dropTargetDraftIndex() === index"
+          draggable="true"
+          (dragstart)="onDraftPhotoDragStart($event, index)"
+          (dragover)="onDraftPhotoDragOver($event, index)"
+          (drop)="onDraftPhotoDrop($event, index)"
+          (dragend)="onDraftPhotoDragEnd()"
+        >
+          <img
+            [src]="photo.url"
+            alt="photo of member"
+            draggable="false"
+            class="aspect-square w-full object-cover"
+          />
+
+          @if (index === 0) {
+            <span class="badge badge-primary badge-sm absolute left-2 top-2">Cover</span>
+          }
+
+          @if (photo.kind === 'new') {
+            <span class="badge badge-warning badge-sm absolute bottom-2 left-2">Pending</span>
+          }
+
+          <button
+            (click)="removeDraftPhoto(photo.draftId)"
+            type="button"
+            class="btn btn-square btn-error btn-soft btn-xs absolute right-2 top-2"
+            [disabled]="loading() || draftPhotos().length <= minPhotos"
+            aria-label="Remove photo"
+          >
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      }
+
+      @if (draftPhotos().length < maxPhotos) {
+        <button
+          (click)="openPhotoPicker(photoInput)"
+          type="button"
+          class="flex aspect-square w-full flex-col items-center justify-center rounded-lg border border-dashed border-base-300 bg-base-200/60 text-base-content/70 transition hover:border-primary hover:bg-primary/5"
+          [disabled]="loading()"
+          aria-label="Add photos"
+        >
+          <span class="text-4xl leading-none">+</span>
+          <span class="text-sm">Add photos</span>
+        </button>
+      }
+    </div>
+
+    @if (hasDraftChanges()) {
+      <div class="flex flex-wrap gap-3 rounded-lg bg-base-200 p-3 text-sm text-base-content/70">
+        @if (draftNewCount() > 0) {
+          <span>{{ draftNewCount() }} photo{{ draftNewCount() === 1 ? '' : 's' }} selected</span>
+        }
+        @if (draftDeleteCount() > 0) {
+          <span>{{ draftDeleteCount() }} photo{{ draftDeleteCount() === 1 ? '' : 's' }} removed</span>
+        }
+        @if (draftOrderChanged()) {
+          <span>Order changed</span>
         }
       </div>
-    } @else {
-      <p class="text-center text-gray-500">No photos available</p>
     }
   }
-} @else {
-  <div class="flex flex-col gap-3">
-    <app-image-upload
-      (uploadFile)="onUploadImage($event)"
-      [loading]="loading()"
-      [disabled]="photos().length >= maxPhotos"
-    />
-    @if (photos().length >= maxPhotos) {
-      <p class="text-sm text-base-content/60">You can upload up to {{ maxPhotos }} photos.</p>
-    }
-  </div>
-}
+</div>

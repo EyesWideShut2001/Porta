@@ -52,8 +52,22 @@ export class MemberService {
     return this.http.post<Photo>(this.baseUrl + 'members/add-photo', formData);
   }
 
-  setMainPhoto(photo: Photo) {
-    return this.http.put(this.baseUrl + 'members/set-main-photo/' + photo.id, {});
+  updatePhotos(photoOrder: string[], newPhotos: File[]) {
+    const formData = new FormData();
+
+    for (const photoKey of photoOrder) {
+      formData.append('photoOrder', photoKey);
+    }
+
+    for (const photo of newPhotos) {
+      formData.append('newPhotos', photo, photo.name);
+    }
+
+    return this.http.put<Photo[]>(this.baseUrl + 'members/photos', formData);
+  }
+
+  reorderPhotos(photoIds: number[]) {
+    return this.http.put(this.baseUrl + 'members/reorder-photos', { photoIds });
   }
 
   deletePhoto(photoId: number) {

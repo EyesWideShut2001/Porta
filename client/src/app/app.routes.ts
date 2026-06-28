@@ -15,6 +15,7 @@ import { preventUnsavedChangesGuard } from '../core/guards/prevent-unsaved-chang
 import { Admin } from '../features/admin/admin';
 import { adminGuard } from '../core/guards/admin-guard';
 import { guestGuard } from '../core/guards/guest-guard';
+import { memberMessagesGuard } from '../core/guards/member-messages-guard';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', component: Home, canActivate: [guestGuard] },
@@ -39,7 +40,12 @@ export const routes: Routes = [
             canDeactivate: [preventUnsavedChangesGuard],
           },
           { path: 'photos', component: MemberPhotos, title: 'Photos' },
-          { path: 'messages', component: MemberMessages, title: 'Messages' },
+          {
+            path: 'messages',
+            component: MemberMessages,
+            title: 'Messages',
+            canActivate: [memberMessagesGuard],
+          },
         ],
       },
       { path: 'lists', component: Lists },

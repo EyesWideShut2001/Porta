@@ -51,6 +51,8 @@ public class MemberRepository(AppDbContext context) : IMemberRepository
         return await context.Members
             .Where(x => x.Id == memberId)
             .SelectMany(x => x.Photos)
+            .OrderBy(x => x.DisplayOrder)
+            .ThenBy(x => x.Id)
             .ToListAsync();
     }
 

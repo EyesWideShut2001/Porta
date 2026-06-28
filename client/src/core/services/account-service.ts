@@ -80,6 +80,10 @@ export class AccountService {
     }
   }
 
+  updateCurrentUser(updates: Partial<Pick<User, 'displayName' | 'imageUrl'>>) {
+    this.currentUser.update((user) => (user ? { ...user, ...updates } : null));
+  }
+
   logout() {
     localStorage.removeItem('filters');
     this.likesService.clearLikeIds();

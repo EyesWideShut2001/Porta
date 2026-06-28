@@ -53,7 +53,15 @@ public class Seed
             user.Member.Photos.Add(new Photo
             {
                 Url = member.ImageUrl!,
-                MemberId = member.Id
+                MemberId = member.Id,
+                DisplayOrder = 0
+            });
+
+            user.Member.Photos.Add(new Photo
+            {
+                Url = $"https://picsum.photos/seed/{member.Id}/600/600",
+                MemberId = member.Id,
+                DisplayOrder = 1
             });
 
             var result = await userManager.CreateAsync(user, "Pa$$w0rd");

@@ -14,22 +14,34 @@
     @if (memberService.editMode()) {
       <form #editForm="ngForm" (ngSubmit)="updateProfile()" class="flex flex-col w-full gap-4">
         <label class="floating-label">
-          <span>Dislay Name</span>
+          <span>Display name</span>
           <input
             class="input w-full"
             name="displayName"
+            required
+            minlength="2"
+            maxlength="50"
             [(ngModel)]="editableMember.displayName"
+            #displayName="ngModel"
             placeholder="Display name"
+            [class.input-error]="displayName.invalid && displayName.touched"
           />
         </label>
+        @if (displayName.hasError('required') && displayName.touched) {
+          <div class="validation-hint text-error text-xs">Display name is required</div>
+        }
+        @if (displayName.hasError('minlength') && displayName.touched) {
+          <div class="validation-hint text-error text-xs">Display name must be at least 2 characters</div>
+        }
 
         <label class="floating-label">
           <span>Description</span>
           <textarea
             class="textarea w-full"
             name="description"
+            maxlength="1000"
             [(ngModel)]="editableMember.description"
-            placeholder="Display name"
+            placeholder="About you"
           ></textarea>
         </label>
 
@@ -38,26 +50,50 @@
           <input
             class="input w-full"
             name="city"
+            required
+            minlength="2"
+            maxlength="80"
             [(ngModel)]="editableMember.city"
-            placeholder="Display name"
+            #city="ngModel"
+            placeholder="City"
+            [class.input-error]="city.invalid && city.touched"
           />
         </label>
+        @if (city.hasError('required') && city.touched) {
+          <div class="validation-hint text-error text-xs">City is required</div>
+        }
+        @if (city.hasError('minlength') && city.touched) {
+          <div class="validation-hint text-error text-xs">City must be at least 2 characters</div>
+        }
 
-        <label class="floating-label">
-          <span>Country</span>
-          <input
-            class="input w-full"
-            name="country"
-            [(ngModel)]="editableMember.country"
-            placeholder="Display name"
-          />
-        </label>
+        <app-country-select
+          name="country"
+          required
+          [(ngModel)]="editableMember.country"
+          #country="ngModel"
+          [invalid]="country.invalid === true && country.touched === true"
+        />
+        @if (country.hasError('required') && country.touched) {
+          <div class="validation-hint text-error text-xs">Country is required</div>
+        }
+
         <div class="flex self-end">
-          <button [disabled]="!editForm.dirty" type="submit" class="btn btn-success">Submit</button>
+          <button [disabled]="editForm.invalid || !editForm.dirty" type="submit" class="btn btn-success">
+            Save changes
+          </button>
         </div>
       </form>
     } @else {
-      <div>{{ member.description || 'No description provided yet' }}</div>
+      <div class="grid gap-4 md:grid-cols-2">
+        <div>
+          <div class="text-sm font-semibold uppercase text-base-content/60">Location</div>
+          <div>{{ member.city }}, {{ member.country }}</div>
+        </div>
+        <div class="md:col-span-2">
+          <div class="text-sm font-semibold uppercase text-base-content/60">Description</div>
+          <div>{{ member.description || 'No description provided yet' }}</div>
+        </div>
+      </div>
     }
   </div>
 }

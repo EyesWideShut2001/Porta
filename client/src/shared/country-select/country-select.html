@@ -1,0 +1,17 @@
+<fieldset class="fieldset">
+  <legend class="fieldset-legend">{{ label() }}</legend>
+  <select
+    autocomplete="country-name"
+    class="select w-full"
+    [class.select-error]="invalid()"
+    [disabled]="isDisabled"
+    [value]="value"
+    (change)="handleChange($event)"
+    (blur)="handleBlur()"
+  >
+    <option value="" disabled>{{ placeholder() }}</option>
+    @for (country of countries; track country) {
+      <option [value]="country">{{ country }}</option>
+    }
+  </select>
+</fieldset>
