@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AccountService } from '../../core/services/account-service';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
@@ -19,11 +19,15 @@ export class Nav implements OnInit {
   private router = inject(Router);
   private toast = inject(ToastService);
   protected creds: any = {};
-  protected selectedTheme = signal<string>(localStorage.getItem('theme') || 'light');
+  protected selectedTheme = signal<string>(this.getInitialTheme());
+  protected selectedThemeLabel = computed(
+    () => themes.find((theme) => theme.value === this.selectedTheme())?.label ?? themes[0].label,
+  );
   protected themes = themes;
   protected loading = signal(false);
 
   ngOnInit(): void {
+    localStorage.setItem('theme', this.selectedTheme());
     document.documentElement.setAttribute('data-theme', this.selectedTheme());
   }
 
@@ -63,5 +67,11 @@ export class Nav implements OnInit {
   logout() {
     this.accountService.logout();
     this.router.navigateByUrl('/');
+  }
+
+  private getInitialTheme() {
+    const savedTheme = localStorage.getItem('theme');
+
+    return themes.some((theme) => theme.value === savedTheme) ? savedTheme! : themes[0].value;
   }
 }
