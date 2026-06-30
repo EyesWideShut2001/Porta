@@ -39,6 +39,7 @@ public class RegisterDto : IValidatableObject
     public string? Description { get; set; }
 
     public List<IFormFile> Photos { get; set; } = [];
+    public List<int> InterestIds { get; set; } = [];
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
@@ -73,6 +74,20 @@ public class RegisterDto : IValidatableObject
             yield return new ValidationResult(
                 $"Registration requires between {MinPhotos} and {MaxPhotos} photos",
                 [nameof(Photos)]);
+        }
+
+        if (InterestIds.Count == 0)
+        {
+            yield return new ValidationResult(
+                "Select at least one interest",
+                [nameof(InterestIds)]);
+        }
+
+        if (InterestIds.Count != InterestIds.Distinct().Count())
+        {
+            yield return new ValidationResult(
+                "Interests cannot contain duplicates",
+                [nameof(InterestIds)]);
         }
 
         foreach (var photo in Photos)

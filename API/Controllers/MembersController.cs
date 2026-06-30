@@ -50,6 +50,29 @@ namespace API.Controllers
 
             if (member == null) return BadRequest("Could not get member!");
 
+            if (memberUpdateDto.InterestIds is { } submittedInterestIds)
+            {
+                if (submittedInterestIds.Count == 0)
+                {
+                    return BadRequest("Select at least one interest");
+                }
+
+                var distinctInterestIds = submittedInterestIds.Distinct().ToList();
+                if (distinctInterestIds.Count != submittedInterestIds.Count)
+                {
+                    return BadRequest("Interests cannot contain duplicates");
+                }
+
+                var interests = await uow.MemberRepository.GetInterestsByIdsAsync(distinctInterestIds);
+                if (interests.Count != distinctInterestIds.Count)
+                {
+                    return BadRequest("One or more interests are invalid");
+                }
+
+                member.Interests.Clear();
+                member.Interests.AddRange(interests);
+            }
+
             member.DisplayName = memberUpdateDto.DisplayName ?? member.DisplayName;
             member.Description = memberUpdateDto.Description ?? member.Description;
             member.City = memberUpdateDto.City ?? member.City;

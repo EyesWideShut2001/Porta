@@ -87,9 +87,44 @@
           <div class="validation-hint text-error text-xs">Country is required</div>
         }
 
+        <fieldset class="fieldset rounded-box border border-base-300 bg-base-200 p-4 sm:col-span-2">
+          <legend class="fieldset-legend text-base">Interests</legend>
+          <p class="mb-3 text-sm text-base-content/60">Choose one or more interests.</p>
+
+          <div class="flex flex-col gap-4">
+            @for (group of interestGroups; track group.label) {
+              <div>
+                <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-base-content/50">
+                  {{ group.label }}
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  @for (interest of group.interests; track interest.id) {
+                    <button
+                      type="button"
+                      class="btn btn-sm"
+                      [class.btn-primary]="isInterestSelected(interest.id)"
+                      [class.btn-ghost]="!isInterestSelected(interest.id)"
+                      (click)="toggleInterest(interest.id)"
+                      [attr.aria-pressed]="isInterestSelected(interest.id)"
+                    >
+                      {{ interest.name }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          @if (editableMember.interestIds.length === 0) {
+            <div class="mt-3 text-error text-xs">Select at least one interest</div>
+          }
+        </fieldset>
+
         <div class="flex justify-end sm:col-span-2">
           <button
-            [disabled]="editForm.invalid || !editForm.dirty"
+            [disabled]="
+              editForm.invalid || !editForm.dirty || editableMember.interestIds.length === 0
+            "
             type="submit"
             class="btn btn-primary"
           >
@@ -114,6 +149,18 @@
             <p class="mt-2 leading-7 text-base-content/75">
               {{ member.description || 'No description provided yet.' }}
             </p>
+          </div>
+          <div class="rounded-box border border-base-300 p-4 md:col-span-3">
+            <div class="text-xs font-semibold uppercase text-base-content/50">Interests</div>
+            @if (member.interests.length > 0) {
+              <div class="mt-3 flex flex-wrap gap-2">
+                @for (interest of member.interests; track interest.id) {
+                  <span class="badge badge-primary badge-soft">{{ interest.name }}</span>
+                }
+              </div>
+            } @else {
+              <p class="mt-2 text-base-content/60">No interests selected yet.</p>
+            }
           </div>
         </div>
       </section>

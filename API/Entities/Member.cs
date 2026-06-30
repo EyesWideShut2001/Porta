@@ -18,6 +18,8 @@ public class Member
     public required string City { get; set; }
     public required string Country { get; set; }
 
+    public List<Interest> Interests { get; set; } = [];
+
     //Navigation property
     [JsonIgnore]
     public List<Photo> Photos { get; set; } = [];

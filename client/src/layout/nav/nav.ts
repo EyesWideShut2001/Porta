@@ -6,6 +6,7 @@ import { ToastService } from '../../core/services/toast-service';
 import { themes } from '../theme';
 import { BusyService } from '../../core/services/busy-service';
 import { HasRole } from '../../shared/directive/has-role';
+import { PresenceService } from '../../core/services/presence-service';
 
 @Component({
   selector: 'app-nav',
@@ -16,6 +17,7 @@ import { HasRole } from '../../shared/directive/has-role';
 export class Nav implements OnInit {
   protected accountService = inject(AccountService);
   protected busyService = inject(BusyService);
+  protected presenceService = inject(PresenceService);
   private router = inject(Router);
   private toast = inject(ToastService);
   protected creds: any = {};

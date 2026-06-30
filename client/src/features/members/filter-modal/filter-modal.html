@@ -27,6 +27,36 @@
         </form>
       </label>
 
+      <fieldset class="fieldset border-t border-base-300 pt-5">
+        <legend class="fieldset-legend text-base">Interests</legend>
+        <p class="mb-3 text-sm text-base-content/60">
+          Match any of the selected interests.
+        </p>
+        <div class="max-h-56 space-y-4 overflow-y-auto pr-2">
+          @for (group of interestGroups; track group.label) {
+            <div>
+              <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-base-content/50">
+                {{ group.label }}
+              </div>
+              <div class="flex flex-wrap gap-2">
+                @for (interest of group.interests; track interest.id) {
+                  <button
+                    type="button"
+                    class="btn btn-xs"
+                    [class.btn-primary]="isInterestSelected(interest.id)"
+                    [class.btn-ghost]="!isInterestSelected(interest.id)"
+                    (click)="toggleInterest(interest.id)"
+                    [attr.aria-pressed]="isInterestSelected(interest.id)"
+                  >
+                    {{ interest.name }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </fieldset>
+
       <label class="grid items-center gap-3 sm:grid-cols-[1fr_auto]">
         <span class="font-semibold">Age range</span>
         <div class="flex gap-3">

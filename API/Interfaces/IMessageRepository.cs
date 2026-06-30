@@ -10,8 +10,9 @@ public interface IMessageRepository
     void AddMessage(Message message);
     void DeleteMessage(Message message);
     Task<Message?> GetMessage(string messageId);
-    Task<PaginatedResult<MessageDto>> GetMessagesForMember(MessageParams messageParams);
+    Task<PaginatedResult<ConversationDto>> GetConversationsForMember(ConversationParams conversationParams);
     Task<IReadOnlyList<MessageDto>> GetMessageThread(string currentMemberId, string recipientId);
+    Task<int> GetUnreadMessageCount(string memberId);
 
 
     void AddGroup(Group group);

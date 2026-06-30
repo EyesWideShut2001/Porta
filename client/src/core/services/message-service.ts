@@ -3,8 +3,10 @@ import { environment } from '../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { PaginatedResult } from '../../types/pagination';
 import { Message } from '../../types/message';
+import { Conversation } from '../../types/conversation';
 import { AccountService } from './account-service';
 import { HubConnection, HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
+import { PresenceService } from './presence-service';
 
 @Injectable({
   providedIn: 'root',
@@ -14,6 +16,7 @@ export class MessageService {
   private hubUrl = environment.hubUrl;
   private http = inject(HttpClient);
   private accountService = inject(AccountService);
+  private presenceService = inject(PresenceService);
   private hubConnection?: HubConnection;
   messageThread = signal<Message[]>([]);
 
@@ -36,6 +39,7 @@ export class MessageService {
           currentUserSender: message.senderId !== otherUserId,
         })),
       );
+      this.presenceService.loadUnreadMessageCount();
     });
 
     this.hubConnection.on('NewMessage', (message: Message) => {
@@ -50,14 +54,13 @@ export class MessageService {
     }
   }
 
-  getMessages(container: string, pageNumber: number, pageSize: number) {
+  getConversations(pageNumber: number, pageSize: number) {
     let params = new HttpParams();
 
     params = params.append('pageNumber', pageNumber);
     params = params.append('pageSize', pageSize);
-    params = params.append('container', container);
 
-    return this.http.get<PaginatedResult<Message>>(this.baseUrl + 'messages', { params });
+    return this.http.get<PaginatedResult<Conversation>>(this.baseUrl + 'messages', { params });
   }
 
   getMessageThread(memberId: string) {

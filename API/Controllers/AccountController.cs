@@ -1,5 +1,6 @@
 using System;
 using API.DTOs;
+using API.Data;
 using API.Entities;
 using API.Extensions;
 using API.Interfaces;
@@ -14,7 +15,8 @@ public class AccountController(
     UserManager<AppUser> userManager,
     ITokenService tokenService,
     IPhotoService photoService,
-    IWebHostEnvironment env) : BaseApiController
+    IWebHostEnvironment env,
+    AppDbContext context) : BaseApiController
 {
 
     [HttpPost("register")]  // api/account/register
@@ -28,6 +30,17 @@ public class AccountController(
         var description = string.IsNullOrWhiteSpace(registerDto.Description)
             ? null
             : registerDto.Description.Trim();
+        var interestIds = registerDto.InterestIds.Distinct().ToList();
+        var interests = await context.Interests
+            .Where(x => interestIds.Contains(x.Id))
+            .ToListAsync();
+
+        if (interests.Count != interestIds.Count)
+        {
+            ModelState.AddModelError(nameof(RegisterDto.InterestIds), "One or more interests are invalid");
+            return ValidationProblem();
+        }
+
         var uploadedPhotos = new List<Photo>();
 
         foreach (var file in registerDto.Photos)
@@ -71,7 +84,8 @@ public class AccountController(
                 DateOfBirth = registerDto.DateOfBirth,
                 Description = description,
                 ImageUrl = uploadedPhotos[0].Url,
-                Photos = uploadedPhotos
+                Photos = uploadedPhotos,
+                Interests = interests
             }
         };
 

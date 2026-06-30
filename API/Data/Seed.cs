@@ -11,7 +11,7 @@ namespace API.Data;
 
 public class Seed
 {
-    public static async Task SeedUsers(UserManager<AppUser> userManager)
+    public static async Task SeedUsers(UserManager<AppUser> userManager, AppDbContext context)
     {
         if (await userManager.Users.AnyAsync()) return;
 
@@ -25,8 +25,11 @@ public class Seed
         }
 
 
-        foreach (var member in members)
+        var interests = await context.Interests.OrderBy(x => x.Id).ToListAsync();
+
+        for (var memberIndex = 0; memberIndex < members.Count; memberIndex++)
         {
+            var member = members[memberIndex];
 
             var user = new AppUser
             {
@@ -46,7 +49,11 @@ public class Seed
                     City = member.City,
                     Country = member.Country,
                     LastActive = member.LastActive,
-                    Created = member.Created
+                    Created = member.Created,
+                    Interests = interests
+                        .Where(x => (x.Id + memberIndex) % 7 == 0)
+                        .Take(6)
+                        .ToList()
                 }
             };
 

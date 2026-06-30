@@ -1,6 +1,7 @@
 import { Component, ElementRef, input, model, output, ViewChild } from '@angular/core';
 import { MemberParams } from '../../../types/member';
 import { FormsModule } from '@angular/forms';
+import { interestGroups } from '../../../core/constants/interests';
 
 @Component({
   selector: 'app-filter-modal',
@@ -13,12 +14,18 @@ export class FilterModal {
   closeModal = output();
   submitData = output<MemberParams>();
   memberParams = model(new MemberParams());
+  protected readonly interestGroups = interestGroups;
 
   constructor() {
     const filters = localStorage.getItem('filters');
 
     if (filters) {
-      this.memberParams.set(JSON.parse(filters));
+      const savedFilters = JSON.parse(filters);
+      this.memberParams.set({
+        ...new MemberParams(),
+        ...savedFilters,
+        interestIds: savedFilters.interestIds ?? [],
+      });
     }
   }
 
@@ -44,5 +51,18 @@ export class FilterModal {
     if (this.memberParams().maxAge < this.memberParams().minAge) {
       this.memberParams().maxAge = this.memberParams().minAge;
     }
+  }
+
+  isInterestSelected(interestId: number) {
+    return (this.memberParams().interestIds ?? []).includes(interestId);
+  }
+
+  toggleInterest(interestId: number) {
+    this.memberParams.update((params) => ({
+      ...params,
+      interestIds: this.isInterestSelected(interestId)
+        ? params.interestIds.filter((id) => id !== interestId)
+        : [...params.interestIds, interestId],
+    }));
   }
 }

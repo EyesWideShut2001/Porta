@@ -50,21 +50,63 @@ public class MessageRepository(AppDbContext context) : IMessageRepository
             .FirstOrDefaultAsync(x => x.Name == groupName);
     }
 
-    public async Task<PaginatedResult<MessageDto>> GetMessagesForMember(MessageParams messageParams)
+    public async Task<PaginatedResult<ConversationDto>> GetConversationsForMember(ConversationParams conversationParams)
     {
-        var query = context.Messages
-            .OrderByDescending(x => x.MessageSent)
-            .AsQueryable();
+        var memberId = conversationParams.MemberId!;
 
-        query = messageParams.Container switch
+        var conversationItems = await context.Messages
+            .Where(x =>
+                (x.SenderId == memberId && x.SenderDeleted == false) ||
+                (x.RecipientId == memberId && x.RecipientDeleted == false))
+            .Select(x => new
+            {
+                OtherMemberId = x.SenderId == memberId ? x.RecipientId : x.SenderId,
+                OtherMemberDisplayName = x.SenderId == memberId ? x.Recipient.DisplayName : x.Sender.DisplayName,
+                OtherMemberImageUrl = x.SenderId == memberId ? x.Recipient.ImageUrl : x.Sender.ImageUrl,
+                LastMessage = x.Content,
+                LastMessageSent = x.MessageSent,
+                LastMessageFromCurrentUser = x.SenderId == memberId,
+                IsUnread = x.RecipientId == memberId && x.DateRead == null && x.RecipientDeleted == false
+            })
+            .ToListAsync();
+
+        var conversations = conversationItems
+            .GroupBy(x => x.OtherMemberId)
+            .Select(group =>
+            {
+                var latestMessage = group.OrderByDescending(x => x.LastMessageSent).First();
+
+                return new ConversationDto
+                {
+                    OtherMemberId = latestMessage.OtherMemberId,
+                    OtherMemberDisplayName = latestMessage.OtherMemberDisplayName,
+                    OtherMemberImageUrl = latestMessage.OtherMemberImageUrl,
+                    LastMessage = latestMessage.LastMessage,
+                    LastMessageSent = latestMessage.LastMessageSent,
+                    LastMessageFromCurrentUser = latestMessage.LastMessageFromCurrentUser,
+                    UnreadCount = group.Count(x => x.IsUnread)
+                };
+            })
+            .OrderByDescending(x => x.LastMessageSent)
+            .ToList();
+
+        var totalCount = conversations.Count;
+        var items = conversations
+            .Skip((conversationParams.PageNumber - 1) * conversationParams.PageSize)
+            .Take(conversationParams.PageSize)
+            .ToList();
+
+        return new PaginatedResult<ConversationDto>
         {
-            "Outbox" => query.Where(x => x.SenderId == messageParams.MemberId && x.SenderDeleted == false),
-            _ => query.Where(x => x.RecipientId == messageParams.MemberId && x.RecipientDeleted == false)
+            Metadata = new PaginationMetadata
+            {
+                CurrentPage = conversationParams.PageNumber,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)conversationParams.PageSize),
+                PageSize = conversationParams.PageSize,
+                TotalCount = totalCount
+            },
+            Items = items
         };
-
-        var messageQuery = query.Select(MessageExtensions.ToDtoProjection());
-
-        return await PaginationHelper.CreateAsync(messageQuery, messageParams.PageNumber, messageParams.PageSize);
 
     }
 
@@ -80,6 +122,14 @@ public class MessageRepository(AppDbContext context) : IMessageRepository
             .OrderBy(x => x.MessageSent)
             .Select(MessageExtensions.ToDtoProjection())
             .ToListAsync();
+    }
+
+    public async Task<int> GetUnreadMessageCount(string memberId)
+    {
+        return await context.Messages.CountAsync(x =>
+            x.RecipientId == memberId &&
+            x.DateRead == null &&
+            x.RecipientDeleted == false);
     }
 
     public async Task RemoveConnection(string connectionId)

@@ -6,6 +6,7 @@ import { PaginatedResult } from '../../../types/pagination';
 import { Paginator } from '../../../shared/paginator/paginator';
 import { FilterModal } from '../filter-modal/filter-modal';
 import { filter } from 'rxjs';
+import { interests } from '../../../core/constants/interests';
 
 @Component({
   selector: 'app-member-list',
@@ -24,8 +25,13 @@ export class MemberList implements OnInit {
     const filters = localStorage.getItem('filters');
 
     if (filters) {
-      this.memberParams = JSON.parse(filters);
-      this.updatedParams = JSON.parse(filters);
+      const savedFilters = JSON.parse(filters);
+      this.memberParams = {
+        ...new MemberParams(),
+        ...savedFilters,
+        interestIds: savedFilters.interestIds ?? [],
+      };
+      this.updatedParams = { ...this.memberParams, interestIds: [...this.memberParams.interestIds] };
     }
   }
 
@@ -56,8 +62,8 @@ export class MemberList implements OnInit {
   }
 
   onFilterChange(data: MemberParams) {
-    this.memberParams = { ...data };
-    this.updatedParams = { ...data };
+    this.memberParams = { ...data, interestIds: [...data.interestIds] };
+    this.updatedParams = { ...data, interestIds: [...data.interestIds] };
     this.loadMembers();
   }
 
@@ -83,6 +89,13 @@ export class MemberList implements OnInit {
       this.updatedParams.maxAge !== defaultParams.maxAge
     ) {
       filters.push(` ages ${this.updatedParams.minAge}-${this.updatedParams.maxAge}`);
+    }
+
+    if (this.updatedParams.interestIds.length > 0) {
+      const selectedInterestNames = interests
+        .filter((interest) => this.updatedParams.interestIds.includes(interest.id))
+        .map((interest) => interest.name);
+      filters.push(`Interests: ${selectedInterestNames.join(', ')}`);
     }
 
     filters.push(

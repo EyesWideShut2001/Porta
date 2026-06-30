@@ -63,6 +63,7 @@
 <app-filter-modal
   #filterModal
   [hidden]="!paginatedMembers()"
+  [memberParams]="memberParams"
   (closeModal)="onClose()"
   (submitData)="onFilterChange($event)"
 ></app-filter-modal>

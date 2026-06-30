@@ -7,6 +7,7 @@ import { ToastService } from '../../../core/services/toast-service';
 import { AccountService } from '../../../core/services/account-service';
 import { TimeAgoPipe } from '../../../core/pipes/time-ago-pipe';
 import { CountrySelect } from '../../../shared/country-select/country-select';
+import { interestGroups, interests } from '../../../core/constants/interests';
 
 @Component({
   selector: 'app-member-profile',
@@ -25,11 +26,13 @@ export class MemberProfile implements OnInit, OnDestroy {
   private accountService = inject(AccountService);
   protected memberService = inject(MemberService);
   private toast = inject(ToastService);
+  protected readonly interestGroups = interestGroups;
   protected editableMember: EditableMember = {
     displayName: '',
     description: '',
     city: '',
     country: '',
+    interestIds: [],
   };
 
   ngOnInit(): void {
@@ -38,7 +41,20 @@ export class MemberProfile implements OnInit, OnDestroy {
       description: this.memberService.member()?.description || '',
       city: this.memberService.member()?.city || '',
       country: this.memberService.member()?.country || '',
+      interestIds: this.memberService.member()?.interests?.map((interest) => interest.id) ?? [],
     };
+  }
+
+  isInterestSelected(interestId: number) {
+    return this.editableMember.interestIds.includes(interestId);
+  }
+
+  toggleInterest(interestId: number) {
+    this.editableMember.interestIds = this.isInterestSelected(interestId)
+      ? this.editableMember.interestIds.filter((id) => id !== interestId)
+      : [...this.editableMember.interestIds, interestId];
+
+    this.editForm?.control.markAsDirty();
   }
 
   updateProfile() {
@@ -48,8 +64,14 @@ export class MemberProfile implements OnInit, OnDestroy {
       description: this.editableMember.description?.trim(),
       city: this.editableMember.city.trim(),
       country: this.editableMember.country.trim(),
+      interestIds: [...this.editableMember.interestIds],
     };
-    const updatedMember = { ...this.memberService.member(), ...this.editableMember };
+    const { interestIds, ...profileUpdates } = this.editableMember;
+    const updatedMember = {
+      ...this.memberService.member(),
+      ...profileUpdates,
+      interests: interests.filter((interest) => interestIds.includes(interest.id)),
+    };
     this.memberService.updateMember(this.editableMember).subscribe({
       next: () => {
         const currentUser = this.accountService.currentUser();

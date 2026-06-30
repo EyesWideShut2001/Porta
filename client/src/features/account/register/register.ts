@@ -12,6 +12,7 @@ import { AccountService } from '../../../core/services/account-service';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { CountrySelect } from '../../../shared/country-select/country-select';
+import { interestGroups } from '../../../core/constants/interests';
 
 type StagedPhoto = {
   file: File;
@@ -42,6 +43,7 @@ export class Register implements OnDestroy {
   protected stagedPhotos = signal<StagedPhoto[]>([]);
   protected readonly minPhotos = 2;
   protected readonly maxPhotos = 8;
+  protected readonly interestGroups = interestGroups;
   protected readonly genders = [
     { value: 'male', label: 'Male' },
     { value: 'female', label: 'Female' },
@@ -104,6 +106,7 @@ export class Register implements OnDestroy {
       ],
       city: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(80)]],
       country: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(80)]],
+      interestIds: [[], Validators.required],
     }, { validators: this.birthDateValidator() });
 
     this.detailsForm = this.fb.group({
@@ -171,6 +174,22 @@ export class Register implements OnDestroy {
     if (!/^\d$/.test(event.key) && !allowedKeys.includes(event.key)) {
       event.preventDefault();
     }
+  }
+
+  isInterestSelected(interestId: number) {
+    return (this.profileForm.controls['interestIds'].value as number[]).includes(interestId);
+  }
+
+  toggleInterest(interestId: number) {
+    const control = this.profileForm.controls['interestIds'];
+    const selectedIds = control.value as number[];
+    const nextIds = selectedIds.includes(interestId)
+      ? selectedIds.filter((id) => id !== interestId)
+      : [...selectedIds, interestId];
+
+    control.setValue(nextIds);
+    control.markAsDirty();
+    control.markAsTouched();
   }
 
   register() {
@@ -327,6 +346,10 @@ export class Register implements OnDestroy {
     formData.append('dateOfBirth', this.getDateOfBirth());
     formData.append('city', this.profileForm.value.city);
     formData.append('country', this.profileForm.value.country);
+
+    for (const interestId of this.profileForm.value.interestIds as number[]) {
+      formData.append('interestIds', interestId.toString());
+    }
 
     if (description) {
       formData.append('description', description);

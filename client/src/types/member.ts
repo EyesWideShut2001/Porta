@@ -9,6 +9,12 @@ export type Member = {
   description?: string;
   city: string;
   country: string;
+  interests: Interest[];
+};
+
+export type Interest = {
+  id: number;
+  name: string;
 };
 
 export type Photo = {
@@ -24,6 +30,7 @@ export type EditableMember = {
   description?: string;
   city: string;
   country: string;
+  interestIds: number[];
 };
 
 export class MemberParams {
@@ -33,4 +40,5 @@ export class MemberParams {
   pageNumber = 1;
   pageSize = 10;
   orderBy = 'lastActive';
+  interestIds: number[] = [];
 }

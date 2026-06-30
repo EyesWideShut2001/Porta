@@ -78,6 +78,8 @@ export class AccountService {
     if (this.presenceService.hubConnection?.state !== HubConnectionState.Connected) {
       this.presenceService.createHubConnection(user);
     }
+
+    this.presenceService.loadUnreadMessageCount();
   }
 
   updateCurrentUser(updates: Partial<Pick<User, 'displayName' | 'imageUrl'>>) {

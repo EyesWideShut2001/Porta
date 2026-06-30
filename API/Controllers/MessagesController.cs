@@ -33,17 +33,24 @@ public class MessagesController(IUnitOfWork uow) : BaseApiController
     }
 
     [HttpGet]
-    public async Task<ActionResult<PaginatedResult<MessageDto>>> GetMessagesByContainer([FromQuery] MessageParams messageParams)
+    public async Task<ActionResult<PaginatedResult<ConversationDto>>> GetConversations([FromQuery] ConversationParams conversationParams)
     {
-        messageParams.MemberId = User.GetMemberId();
+        conversationParams.MemberId = User.GetMemberId();
 
-        return await uow.MessageRepository.GetMessagesForMember(messageParams);
+        return await uow.MessageRepository.GetConversationsForMember(conversationParams);
     }
 
     [HttpGet("thread/{recipientId}")]
     public async Task<ActionResult<IReadOnlyList<MessageDto>>> GetMessageThread(string recipientId)
     {
         return Ok(await uow.MessageRepository.GetMessageThread(User.GetMemberId(), recipientId));
+    }
+
+    [HttpGet("unread-count")]
+    public async Task<ActionResult> GetUnreadMessageCount()
+    {
+        var count = await uow.MessageRepository.GetUnreadMessageCount(User.GetMemberId());
+        return Ok(new { count });
     }
 
     [HttpDelete("{id}")]

@@ -32,9 +32,17 @@
           >
         </li>
         <li>
-          <a routerLink="/messages" routerLinkActive="bg-primary-content text-primary"
-            >Messages</a
-          >
+          <a routerLink="/messages" routerLinkActive="bg-primary-content text-primary">
+            <span>Messages</span>
+            @if (presenceService.unreadMessageCount() > 0) {
+              <span
+                class="badge badge-error badge-sm font-bold"
+                [attr.aria-label]="presenceService.unreadMessageCount() + ' unread messages'"
+              >
+                {{ presenceService.unreadMessageCount() > 99 ? '99+' : presenceService.unreadMessageCount() }}
+              </span>
+            }
+          </a>
         </li>
         <li>
           <a routerLink="/lists" routerLinkActive="bg-primary-content text-primary">Lists</a>
