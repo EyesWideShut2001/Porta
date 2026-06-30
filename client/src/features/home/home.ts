@@ -1,10 +1,10 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { Register } from '../account/register/register';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-home',
-  imports: [Register],
+  imports: [Register, RouterLink],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })

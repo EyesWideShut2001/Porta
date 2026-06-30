@@ -99,12 +99,17 @@
       </form>
     }
 
-    <div class="dropdown dropdown-end z-40">
+    <div
+      class="dropdown dropdown-end z-40"
+      [class.dropdown-open]="themeMenuOpen()"
+      (click)="$event.stopPropagation()"
+    >
       <button
         type="button"
-        tabindex="0"
+        (click)="toggleThemeMenu($event)"
         class="btn btn-ghost btn-sm h-auto gap-2 py-1 uppercase"
         aria-label="Select application theme"
+        [attr.aria-expanded]="themeMenuOpen()"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -123,32 +128,33 @@
         <span class="hidden capitalize xl:inline">{{ selectedThemeLabel() }}</span>
       </button>
 
-      <ul
-        tabindex="-1"
-        class="dropdown-content menu menu-sm z-40 mt-3 grid w-[calc(100vw-2rem)] max-w-xl grid-cols-3 gap-1 rounded-box bg-base-100 p-2 text-base-content shadow-xl sm:gap-2 lg:grid-cols-5"
-      >
-        @for (theme of themes; track theme.value) {
-          <li>
-            <button
-              type="button"
-              (click)="handleSelectedTheme(theme.value)"
-              [class.menu-active]="selectedTheme() === theme.value"
-              class="min-w-0 flex-col items-stretch gap-1 px-2 py-1.5 text-left capitalize"
-            >
-              <span class="truncate">{{ theme.label }}</span>
-              <span
-                [attr.data-theme]="theme.value"
-                class="grid grid-cols-3 overflow-hidden rounded-box shadow-sm"
-                aria-hidden="true"
+      @if (themeMenuOpen()) {
+        <ul
+          class="dropdown-content menu menu-sm z-40 mt-3 grid w-[calc(100vw-2rem)] max-w-xl grid-cols-3 gap-1 rounded-box bg-base-100 p-2 text-base-content shadow-xl sm:gap-2 lg:grid-cols-5"
+        >
+          @for (theme of themes; track theme.value) {
+            <li>
+              <button
+                type="button"
+                (click)="handleSelectedTheme(theme.value)"
+                [class.menu-active]="selectedTheme() === theme.value"
+                class="min-w-0 flex-col items-stretch gap-1 px-2 py-1.5 text-left capitalize"
               >
-                <span class="h-2 bg-primary"></span>
-                <span class="h-2 bg-secondary"></span>
-                <span class="h-2 bg-accent"></span>
-              </span>
-            </button>
-          </li>
-        }
-      </ul>
+                <span class="truncate">{{ theme.label }}</span>
+                <span
+                  [attr.data-theme]="theme.value"
+                  class="grid grid-cols-3 overflow-hidden rounded-box shadow-sm"
+                  aria-hidden="true"
+                >
+                  <span class="h-2 bg-primary"></span>
+                  <span class="h-2 bg-secondary"></span>
+                  <span class="h-2 bg-accent"></span>
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
     </div>
   </div>
 </header>

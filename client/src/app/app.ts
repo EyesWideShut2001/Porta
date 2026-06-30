@@ -13,6 +13,6 @@ export class App {
 
   protected isPublicLandingRoute() {
     const path = this.router.url.split('?')[0];
-    return path === '/' || path === '/register';
+    return path === '/' || path === '/register' || path === '/learn-more';
   }
 }

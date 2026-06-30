@@ -1,19 +1,27 @@
 @if (memberService.member(); as member) {
-  <div class="flex flex-col gap-3">
-    <div class="flex gap-3">
-      <span class="font-semibold">Member since:</span>
-      <span>{{ member.created | date: 'longDate' }}</span>
+  <div class="mx-auto flex max-w-4xl flex-col gap-6 pb-4">
+    <div class="grid gap-3 sm:grid-cols-2">
+      <div class="rounded-box bg-base-200 p-4">
+        <div class="text-xs font-semibold uppercase tracking-wide text-base-content/50">
+          Member since
+        </div>
+        <div class="mt-1 font-semibold">{{ member.created | date: 'longDate' }}</div>
+      </div>
+      <div class="rounded-box bg-base-200 p-4">
+        <div class="text-xs font-semibold uppercase tracking-wide text-base-content/50">
+          Last active
+        </div>
+        <div class="mt-1 font-semibold">{{ member.lastActive | timeAgo }}</div>
+      </div>
     </div>
 
-    <div class="flex gap-3">
-      <span class="font-semibold">Last active:</span>
-      <span>{{ member.lastActive | timeAgo }}</span>
-    </div>
-
-    <h3 class="text-lg font-semibold text-primary">About {{ member.displayName }}</h3>
     @if (memberService.editMode()) {
-      <form #editForm="ngForm" (ngSubmit)="updateProfile()" class="flex flex-col w-full gap-4">
-        <label class="floating-label">
+      <form
+        #editForm="ngForm"
+        (ngSubmit)="updateProfile()"
+        class="grid gap-5 rounded-box border border-base-300 bg-base-100 p-1 sm:grid-cols-2"
+      >
+        <label class="floating-label sm:col-span-2">
           <span>Display name</span>
           <input
             class="input w-full"
@@ -28,16 +36,20 @@
           />
         </label>
         @if (displayName.hasError('required') && displayName.touched) {
-          <div class="validation-hint text-error text-xs">Display name is required</div>
+          <div class="validation-hint text-error text-xs sm:col-span-2">
+            Display name is required
+          </div>
         }
         @if (displayName.hasError('minlength') && displayName.touched) {
-          <div class="validation-hint text-error text-xs">Display name must be at least 2 characters</div>
+          <div class="validation-hint text-error text-xs sm:col-span-2">
+            Display name must be at least 2 characters
+          </div>
         }
 
-        <label class="floating-label">
+        <label class="floating-label sm:col-span-2">
           <span>Description</span>
           <textarea
-            class="textarea w-full"
+            class="textarea min-h-32 w-full"
             name="description"
             maxlength="1000"
             [(ngModel)]="editableMember.description"
@@ -59,12 +71,6 @@
             [class.input-error]="city.invalid && city.touched"
           />
         </label>
-        @if (city.hasError('required') && city.touched) {
-          <div class="validation-hint text-error text-xs">City is required</div>
-        }
-        @if (city.hasError('minlength') && city.touched) {
-          <div class="validation-hint text-error text-xs">City must be at least 2 characters</div>
-        }
 
         <app-country-select
           name="country"
@@ -73,27 +79,44 @@
           #country="ngModel"
           [invalid]="country.invalid === true && country.touched === true"
         />
+
+        @if (city.invalid && city.touched) {
+          <div class="validation-hint text-error text-xs">Enter a valid city</div>
+        }
         @if (country.hasError('required') && country.touched) {
           <div class="validation-hint text-error text-xs">Country is required</div>
         }
 
-        <div class="flex self-end">
-          <button [disabled]="editForm.invalid || !editForm.dirty" type="submit" class="btn btn-success">
+        <div class="flex justify-end sm:col-span-2">
+          <button
+            [disabled]="editForm.invalid || !editForm.dirty"
+            type="submit"
+            class="btn btn-primary"
+          >
             Save changes
           </button>
         </div>
       </form>
     } @else {
-      <div class="grid gap-4 md:grid-cols-2">
-        <div>
-          <div class="text-sm font-semibold uppercase text-base-content/60">Location</div>
-          <div>{{ member.city }}, {{ member.country }}</div>
+      <section aria-labelledby="about-member">
+        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+          About this member
         </div>
-        <div class="md:col-span-2">
-          <div class="text-sm font-semibold uppercase text-base-content/60">Description</div>
-          <div>{{ member.description || 'No description provided yet' }}</div>
+        <h3 id="about-member" class="mt-1 text-2xl font-bold">About {{ member.displayName }}</h3>
+
+        <div class="mt-5 grid gap-4 md:grid-cols-3">
+          <div class="rounded-box border border-base-300 p-4">
+            <div class="text-xs font-semibold uppercase text-base-content/50">Location</div>
+            <div class="mt-2 font-medium">{{ member.city }}, {{ member.country }}</div>
+          </div>
+          <div class="rounded-box border border-base-300 p-4 md:col-span-2">
+            <div class="text-xs font-semibold uppercase text-base-content/50">Description</div>
+            <p class="mt-2 leading-7 text-base-content/75">
+              {{ member.description || 'No description provided yet.' }}
+            </p>
+          </div>
         </div>
-      </div>
+      </section>
     }
   </div>
 }

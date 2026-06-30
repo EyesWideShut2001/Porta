@@ -1,26 +1,34 @@
-<div class="flex itemscenter w- full gap-3 py-3">
-  <span>Items per page:</span>
-  <select class="select w-24" (change)="onPageChange(undefined, $event.target)">
+<div class="flex flex-wrap items-center justify-end gap-2 py-2 text-sm text-base-content/70">
+  <label for="page-size">Per page</label>
+  <select
+    id="page-size"
+    class="select select-sm w-20 bg-base-100"
+    (change)="onPageChange(undefined, $event.target)"
+  >
     @for (size of pageSizeOptions(); track $index) {
       <option [value]="size" [selected]="size === pageSize()">{{ size }}</option>
     }
   </select>
-  <div class="text-sm">
+  <div class="min-w-24 text-center text-xs font-medium">
     {{ (pageNumber() - 1) * pageSize() + 1 }} - {{ lastItemIndex() }} of {{ totalCount() }}
   </div>
 
-  <div class="flex items-center gap-2">
+  <div class="join">
     <button
-      class="btn btn-circle btn-ghost"
+      type="button"
+      class="btn btn-ghost btn-sm join-item"
       [disabled]="pageNumber() === 1"
       (click)="onPageChange(pageNumber() - 1)"
+      aria-label="Previous page"
     >
       &larr;
     </button>
     <button
-      class="btn btn-circle btn-ghost"
+      type="button"
+      class="btn btn-ghost btn-sm join-item"
       [disabled]="pageNumber() >= totalPages()"
       (click)="onPageChange(pageNumber() + 1)"
+      aria-label="Next page"
     >
       &rarr;
     </button>

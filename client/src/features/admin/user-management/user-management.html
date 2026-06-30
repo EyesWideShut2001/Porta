@@ -1,39 +1,52 @@
-<div class="h-[75vh] overflow-auto rounded-box border border-base-content/5 bg-base-100">
-  <table class="table">
-    <thead>
-      <tr>
-        <th>Email</th>
-        <th>Active roles</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (user of users(); track user.id) {
+<div class="card card-border h-full min-h-0 overflow-hidden bg-base-100 shadow-sm">
+  <div class="min-h-0 flex-1 overflow-auto">
+    <table class="table table-zebra table-pin-rows">
+      <thead>
         <tr>
-          <td>{{ user.email }}</td>
-          <td>{{ user.roles }}</td>
-          <td>
-            <button (click)="openRolesModal(user)" class="btn btn-primary">Edit roles</button>
-          </td>
+          <th class="bg-base-100">Email</th>
+          <th class="bg-base-100">Active roles</th>
+          <th class="bg-base-100 text-right">Actions</th>
         </tr>
-      }
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @for (user of users(); track user.id) {
+          <tr>
+            <td class="font-medium">{{ user.email }}</td>
+            <td class="text-base-content/70">{{ user.roles }}</td>
+            <td class="text-right">
+              <button
+                type="button"
+                (click)="openRolesModal(user)"
+                class="btn btn-primary btn-sm"
+              >
+                Edit roles
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="3" class="py-16 text-center text-base-content/60">No users found.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <dialog #rolesModal class="modal">
-  <div class="modal-box">
-    <h3 class="text-lg font-bold">Edit roles for {{ selectedUser?.email }}</h3>
+  <div class="modal-box border border-base-300 bg-base-100 shadow-xl">
+    <h3 class="text-xl font-bold">Edit user roles</h3>
+    <p class="mt-1 truncate text-sm text-base-content/60">{{ selectedUser?.email }}</p>
 
-    <fieldset class="fieldset w-full p-4 bg-base-100 border border-base-300 rounded-box">
+    <fieldset class="fieldset mt-6 w-full rounded-box border border-base-300 bg-base-200 p-4">
       <legend class="fieldset-legend">Selected roles</legend>
-      @for (role of availableRoles; track $index) {
-        <label class="fieldset-label">
+      @for (role of availableRoles; track role) {
+        <label class="fieldset-label rounded-box px-2 py-2 hover:bg-base-100">
           <input
             (change)="toggleRole($event, role)"
             type="checkbox"
             [checked]="selectedUser?.roles?.includes(role)"
-            class="checkbox"
+            class="checkbox checkbox-primary"
             [disabled]="selectedUser?.email === 'admin@test.com' && role === 'Admin'"
           />
           {{ role }}
@@ -42,7 +55,10 @@
     </fieldset>
 
     <div class="modal-action">
-      <button (click)="updateRoles()" class="btn btn-primary">Submit</button>
+      <form method="dialog">
+        <button class="btn btn-ghost">Cancel</button>
+      </form>
+      <button type="button" (click)="updateRoles()" class="btn btn-primary">Save roles</button>
     </div>
   </div>
 

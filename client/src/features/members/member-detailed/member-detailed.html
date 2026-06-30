@@ -1,69 +1,87 @@
 @if (memberService.member(); as member) {
-  <div class="flex gap-6">
-    <div class="card bg-base-100 flex flex-col h-[85vh] w-1/4">
-      <img
-        src="{{ member.imageUrl || '/user.png' }}"
-        alt="image of member"
-        class="rounded-full mx-10 mt-3 object-cover"
-      />
-      <div class="card-body">
-        <div class="flex flex-col items-center">
-          <div class="flex text-2xl text-primary items-center">
-            {{ member.displayName }}, {{ member.dateOfBirth | age }}
-            @if (presenceService.onlineUsers().includes(member.id)) {
-              <span class="status status-success status-xl ml-3"></span>
-            }
+  <div
+    class="grid gap-4 py-4 lg:h-[calc(100dvh-5rem)] lg:grid-cols-[minmax(16rem,1fr)_3fr]"
+  >
+    <aside class="card card-border min-h-0 overflow-y-auto bg-base-100 shadow-sm">
+      <figure class="relative p-4 pb-0">
+        <img
+          [src]="member.imageUrl || '/user.png'"
+          alt="{{ member.displayName }} profile"
+          class="aspect-square w-full rounded-box object-cover"
+        />
+        @if (presenceService.onlineUsers().includes(member.id)) {
+          <div
+            class="absolute bottom-3 left-7 flex items-center gap-2 rounded-full bg-base-100/90 px-3 py-1 text-xs font-medium shadow-sm backdrop-blur-sm"
+          >
+            <span class="status status-success"></span>
+            Online
           </div>
+        }
+      </figure>
 
-          <div class="text-sm">{{ member.city }}, {{ member.country }}</div>
+      <div class="card-body gap-4 p-5">
+        <div>
+          <h1 class="text-2xl font-bold">
+            {{ member.displayName }}, {{ member.dateOfBirth | age }}
+          </h1>
+          <p class="mt-1 text-sm text-base-content/60">{{ member.city }}, {{ member.country }}</p>
         </div>
 
-        <div class="divider"></div>
-
-        <ul class="menu rouded-box w-full text-xl">
-          <li><a routerLink="profile" routerLinkActive="text-primary">Profile</a></li>
-          <li><a routerLink="photos" routerLinkActive="text-primary">Photos</a></li>
+        <ul class="menu gap-1 rounded-box bg-base-200 p-2">
+          <li><a routerLink="profile" routerLinkActive="menu-active">Profile</a></li>
+          <li><a routerLink="photos" routerLinkActive="menu-active">Photos</a></li>
           @if (!isCurrentUser()) {
-            <li><a routerLink="messages" routerLinkActive="text-primary">Messages</a></li>
+            <li><a routerLink="messages" routerLinkActive="menu-active">Messages</a></li>
           }
         </ul>
-      </div>
 
-      @if (!isCurrentUser()) {
-        <div class="card-actions justify-between gap-2 px-2 mb-3">
-          <button routerLink="/members" class="btn btn-info flex-1">Go back</button>
-          <button
-            (click)="likesService.toggleLike(member.id)"
-            [class.btn-error]="hasLiked()"
-            [class.btn-success]="!hasLiked()"
-            class="btn flex-1"
-          >
-            {{ hasLiked() ? 'Remove like' : 'Like user' }}
-          </button>
-        </div>
-      }
-    </div>
-
-    <div class="card bg-base-100 w-3/4 p-6 flex flex-col h-[85vh]">
-      <div class="flex justify-between items-center">
-        <h3 class="card-title text-3xl text-primary">{{ title() }}</h3>
-        @if (isCurrentUser() && title() === 'Profile') {
-          <button
-            (click)="memberService.editMode.set(!memberService.editMode())"
-            class="btn btn-outline btn-primary"
-          >
-            {{ memberService.editMode() ? 'Cancel' : 'Edit' }}
-          </button>
+        @if (!isCurrentUser()) {
+          <div class="card-actions mt-auto grid grid-cols-2 gap-2">
+            <button routerLink="/members" type="button" class="btn btn-ghost">Go back</button>
+            <button
+              type="button"
+              (click)="likesService.toggleLike(member.id)"
+              [class.btn-error]="hasLiked()"
+              [class.btn-primary]="!hasLiked()"
+              class="btn"
+            >
+              {{ hasLiked() ? 'Unlike' : 'Like' }}
+            </button>
+          </div>
         }
       </div>
+    </aside>
 
-      <div class="divider"></div>
+    <section
+      class="card card-border min-h-0 overflow-hidden bg-base-100 p-5 shadow-sm sm:p-6"
+    >
+      <header class="flex shrink-0 items-center justify-between gap-4">
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+            Member details
+          </div>
+          <h2 class="mt-1 text-3xl font-bold">{{ title() }}</h2>
+        </div>
+        @if (isCurrentUser() && title() === 'Profile') {
+          <button
+            type="button"
+            (click)="memberService.editMode.set(!memberService.editMode())"
+            class="btn btn-primary btn-sm"
+          >
+            {{ memberService.editMode() ? 'Cancel editing' : 'Edit profile' }}
+          </button>
+        }
+      </header>
 
-      <div class="h-full">
+      <div class="divider my-3"></div>
+
+      <div class="min-h-0 flex-1 overflow-y-auto pr-1">
         <router-outlet />
       </div>
-    </div>
+    </section>
   </div>
 } @else {
-  <div>Member not found</div>
+  <div class="card card-border mt-4 bg-base-100 p-8 text-center shadow-sm">
+    <h1 class="text-2xl font-bold">Member not found</h1>
+  </div>
 }

@@ -1,8 +1,16 @@
-<div class="flex flex-col w-full mb-3">
-  <div class="flex justify-between items-center">
-    <div class="tabs tabs-border tabs-lg text-primary">
-      @for (tab of tabs; track $index) {
+<section class="flex h-[calc(100dvh-5rem)] flex-col gap-4 py-4">
+  <header
+    class="card card-border shrink-0 bg-base-100 px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
+  >
+    <div>
+      <h1 class="text-2xl font-bold">Administration</h1>
+      <p class="text-sm text-base-content/60">Manage moderation and user access.</p>
+    </div>
+    <div role="tablist" class="tabs tabs-box bg-base-200">
+      @for (tab of tabs; track tab.value) {
         <button
+          type="button"
+          role="tab"
           class="tab"
           [hidden]="
             tab.value === 'roles' && !accountService.currentUser()?.roles?.includes('Admin')
@@ -14,13 +22,15 @@
         </button>
       }
     </div>
+  </header>
+
+  <div class="min-h-0 flex-1">
+    @if (activeTab === 'roles') {
+      <app-user-management />
+    }
+
+    @if (activeTab === 'photos') {
+      <app-photo-management />
+    }
   </div>
-</div>
-
-@if (activeTab === 'roles') {
-  <app-user-management />
-}
-
-@if (activeTab === 'photos') {
-  <app-photo-management />
-}
+</section>

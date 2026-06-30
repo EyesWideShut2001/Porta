@@ -1,17 +1,26 @@
 @if (paginatedResult(); as paginatedResult) {
-  <div class="flex flex-col w-full">
-    <div class="flex justify-between items-center">
-      <div class="tabs tabs-box tabs-lg text-primary w-fit">
-        @for (tab of tabs; track $index) {
-          <button
-            role="tab"
-            class="tab"
-            [class.tab-active]="predicate === tab.value"
-            (click)="setPredicate(tab.value)"
-          >
-            {{ tab.label }}
-          </button>
-        }
+  <section class="flex h-[calc(100dvh-5rem)] w-full flex-col gap-4 py-4">
+    <header
+      class="card card-border shrink-0 bg-base-100 px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-5"
+    >
+      <div class="flex flex-wrap items-center gap-4">
+        <div>
+          <h1 class="text-2xl font-bold">Connections</h1>
+          <p class="text-sm text-base-content/60">Keep track of interest and mutual likes.</p>
+        </div>
+        <div role="tablist" class="tabs tabs-box bg-base-200">
+          @for (tab of tabs; track tab.value) {
+            <button
+              type="button"
+              role="tab"
+              class="tab"
+              [class.tab-active]="predicate === tab.value"
+              (click)="setPredicate(tab.value)"
+            >
+              {{ tab.label }}
+            </button>
+          }
+        </div>
       </div>
 
       @if (paginatedResult.metadata; as metadata) {
@@ -24,17 +33,27 @@
           (pageChange)="onPageChange($event)"
         />
       }
-    </div>
+    </header>
+
     @if (paginatedResult.items; as members) {
       @if (members.length > 0) {
-        <div class="grid grid-cols-5 gap-6 mt-3">
+        <div
+          class="grid min-h-0 flex-1 grid-cols-2 gap-4 overflow-y-auto pb-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+        >
           @for (member of members; track member.id) {
             <app-member-card [member]="member" />
           }
         </div>
       } @else {
-        <div class="mt-3 textlg">There are no results for this filter</div>
+        <div class="card card-border flex flex-1 items-center justify-center bg-base-100 shadow-sm">
+          <div class="max-w-md p-8 text-center">
+            <h2 class="text-xl font-semibold">Nothing here yet</h2>
+            <p class="mt-2 text-base-content/60">
+              Profiles will appear here as your connections grow.
+            </p>
+          </div>
+        </div>
       }
     }
-  </div>
+  </section>
 }

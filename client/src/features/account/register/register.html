@@ -1,7 +1,31 @@
-<div class="mx-auto w-full max-w-2xl px-4">
-  <div class="card border border-base-300 bg-base-100 shadow-sm">
-    <div class="card-body gap-6 p-6 md:p-8">
-      <h1 class="text-center text-3xl font-semibold">Sign up</h1>
+<div class="mx-auto w-full max-w-3xl px-4">
+  <div class="card card-border bg-base-100 shadow-xl">
+    <div class="card-body gap-7 p-6 sm:p-8 lg:p-10">
+      <header class="flex flex-col gap-5 border-b border-base-300 pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div class="text-left">
+          <div class="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+            Step {{ currentStep() }} of 3
+          </div>
+          <h1 class="mt-1 text-3xl font-bold">Create your Porta profile</h1>
+          <p class="mt-2 text-sm text-base-content/60">
+            Tell us who you are and choose the photos that represent you best.
+          </p>
+        </div>
+
+        <div class="flex shrink-0 gap-1.5" aria-label="Registration progress">
+          <span class="h-2 w-10 rounded-full bg-primary"></span>
+          <span
+            class="h-2 w-10 rounded-full"
+            [class.bg-primary]="currentStep() >= 2"
+            [class.bg-base-300]="currentStep() < 2"
+          ></span>
+          <span
+            class="h-2 w-10 rounded-full"
+            [class.bg-primary]="currentStep() >= 3"
+            [class.bg-base-300]="currentStep() < 3"
+          ></span>
+        </div>
+      </header>
 
       @if (currentStep() === 1) {
         <form [formGroup]="credentialsForm" class="flex flex-col gap-4">

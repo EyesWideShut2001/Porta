@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, HostListener, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AccountService } from '../../core/services/account-service';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
@@ -25,6 +25,7 @@ export class Nav implements OnInit {
   );
   protected themes = themes;
   protected loading = signal(false);
+  protected themeMenuOpen = signal(false);
 
   ngOnInit(): void {
     localStorage.setItem('theme', this.selectedTheme());
@@ -35,8 +36,17 @@ export class Nav implements OnInit {
     this.selectedTheme.set(theme);
     localStorage.setItem('theme', theme);
     document.documentElement.setAttribute('data-theme', theme);
-    const elem = document.activeElement as HTMLDivElement;
-    if (elem) elem.blur();
+    this.themeMenuOpen.set(false);
+  }
+
+  toggleThemeMenu(event: MouseEvent) {
+    event.stopPropagation();
+    this.themeMenuOpen.update((isOpen) => !isOpen);
+  }
+
+  @HostListener('document:click')
+  closeThemeMenu() {
+    this.themeMenuOpen.set(false);
   }
 
   handleSelectUserItem() {

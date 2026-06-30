@@ -16,10 +16,12 @@ import { Admin } from '../features/admin/admin';
 import { adminGuard } from '../core/guards/admin-guard';
 import { guestGuard } from '../core/guards/guest-guard';
 import { memberMessagesGuard } from '../core/guards/member-messages-guard';
+import { LearnMore } from '../features/learn-more/learn-more';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', component: Home, canActivate: [guestGuard] },
   { path: 'register', component: Home, canActivate: [guestGuard], data: { registerMode: true } },
+  { path: 'learn-more', component: LearnMore, title: 'Learn More' },
   {
     path: '',
     runGuardsAndResolvers: 'always',
