@@ -28,9 +28,7 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<AppUser>
 
         modelBuilder.Entity<IdentityRole>()
                 .HasData(
-                        new IdentityRole { Id = "member-id", Name = "Member", NormalizedName = "MEMBER" },
-                        new IdentityRole { Id = "moderator-id", Name = "Moderator", NormalizedName = "MODERATOR" },
-                        new IdentityRole { Id = "admin-id", Name = "Admin", NormalizedName = "ADMIN" }
+                        new IdentityRole { Id = "member-id", Name = "Member", NormalizedName = "MEMBER" }
                 );
 
         modelBuilder.Entity<Message>()

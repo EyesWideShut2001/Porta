@@ -246,18 +246,6 @@ namespace API.Data.Migrations
                             Id = "member-id",
                             Name = "Member",
                             NormalizedName = "MEMBER"
-                        },
-                        new
-                        {
-                            Id = "moderator-id",
-                            Name = "Moderator",
-                            NormalizedName = "MODERATOR"
-                        },
-                        new
-                        {
-                            Id = "admin-id",
-                            Name = "Admin",
-                            NormalizedName = "ADMIN"
                         });
                 });
 

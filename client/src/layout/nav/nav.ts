@@ -5,12 +5,11 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { ToastService } from '../../core/services/toast-service';
 import { themes } from '../theme';
 import { BusyService } from '../../core/services/busy-service';
-import { HasRole } from '../../shared/directive/has-role';
 import { PresenceService } from '../../core/services/presence-service';
 
 @Component({
   selector: 'app-nav',
-  imports: [FormsModule, RouterLink, RouterLinkActive, HasRole],
+  imports: [FormsModule, RouterLink, RouterLinkActive],
   templateUrl: './nav.html',
   styleUrl: './nav.css',
 })
@@ -77,6 +76,7 @@ export class Nav implements OnInit {
   }
 
   logout() {
+    this.creds = {};
     this.accountService.logout();
     this.router.navigateByUrl('/');
   }

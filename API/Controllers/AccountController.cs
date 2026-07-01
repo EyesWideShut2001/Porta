@@ -4,7 +4,6 @@ using API.Data;
 using API.Entities;
 using API.Extensions;
 using API.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -163,22 +162,43 @@ public class AccountController(
             HttpOnly = true,
             Secure = !env.IsDevelopment(),
             SameSite = env.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.Strict,
+            Path = "/",
             Expires = DateTime.UtcNow.AddDays(7)
         };
 
+        DeleteRefreshTokenCookie("/api/account");
         Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
     }
 
-    [Authorize]
     [HttpPost("logout")]
     public async Task<ActionResult> Logout()
     {
-        await userManager.Users
-            .Where(x => x.Id == User.GetMemberId())
-            .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.RefreshToken, _ => null)
-                                                  .SetProperty(x => x.RefreshTokenExpiry, _ => null));
-        Response.Cookies.Delete("refreshToken");
-        return Ok();
+        var refreshToken = Request.Cookies["refreshToken"];
+
+        if (refreshToken != null)
+        {
+            await userManager.Users
+                .Where(x => x.RefreshToken == refreshToken)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(x => x.RefreshToken, _ => null)
+                    .SetProperty(x => x.RefreshTokenExpiry, _ => null));
+        }
+
+        DeleteRefreshTokenCookie("/");
+        DeleteRefreshTokenCookie("/api/account");
+
+        return NoContent();
+    }
+
+    private void DeleteRefreshTokenCookie(string path)
+    {
+        Response.Cookies.Delete("refreshToken", new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = !env.IsDevelopment(),
+            SameSite = env.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.Strict,
+            Path = path
+        });
     }
 
     private void AddIdentityErrorsToModelState(IEnumerable<IdentityError> errors)

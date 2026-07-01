@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { LoginCreds, User } from '../../types/user';
-import { tap } from 'rxjs';
+import { finalize, Subscription, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { LikesService } from './likes-service';
 import { JsonPipe } from '@angular/common';
@@ -17,6 +17,9 @@ export class AccountService {
   private presenceService = inject(PresenceService);
   currentUser = signal<User | null>(null);
   private baseUrl = environment.apiUrl;
+  private refreshIntervalId: ReturnType<typeof setInterval> | null = null;
+  private refreshRequest: Subscription | null = null;
+  private sessionVersion = 0;
 
   register(creds: FormData) {
     return this.http
@@ -53,16 +56,25 @@ export class AccountService {
   }
 
   startTokenRefreshInterval() {
-    setInterval(
+    this.stopTokenRefreshInterval();
+    const sessionVersion = this.sessionVersion;
+
+    this.refreshIntervalId = setInterval(
       () => {
-        this.http
-          .post<User>(this.baseUrl + 'account/refresh-token', {}, { withCredentials: true })
+        if (!this.currentUser() || this.refreshRequest) return;
+
+        this.refreshRequest = this.refreshToken()
+          .pipe(finalize(() => (this.refreshRequest = null)))
           .subscribe({
             next: (user) => {
-              this.setCurrentUser(user);
+              if (user && sessionVersion === this.sessionVersion && this.currentUser()) {
+                this.setCurrentUser(user);
+              }
             },
             error: () => {
-              this.logout();
+              if (sessionVersion === this.sessionVersion) {
+                this.logout();
+              }
             },
           });
       },
@@ -71,7 +83,6 @@ export class AccountService {
   }
 
   setCurrentUser(user: User) {
-    user.roles = this.getRolesFromToken(user);
     this.currentUser.set(user);
     this.likesService.getLikeIds();
 
@@ -87,6 +98,8 @@ export class AccountService {
   }
 
   logout() {
+    this.sessionVersion++;
+    this.stopTokenRefreshInterval();
     localStorage.removeItem('filters');
     this.likesService.clearLikeIds();
     this.currentUser.set(null);
@@ -97,10 +110,13 @@ export class AccountService {
     });
   }
 
-  private getRolesFromToken(user: User): string[] {
-    const payload = user.token.split('.')[1];
-    const decoded = atob(payload);
-    const jsonPayload = JSON.parse(decoded);
-    return Array.isArray(jsonPayload.role) ? jsonPayload.role : [jsonPayload.role];
+  private stopTokenRefreshInterval() {
+    if (this.refreshIntervalId !== null) {
+      clearInterval(this.refreshIntervalId);
+      this.refreshIntervalId = null;
+    }
+
+    this.refreshRequest?.unsubscribe();
+    this.refreshRequest = null;
   }
 }

@@ -83,9 +83,7 @@ builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.JwtBearer
         };
     });
 
-builder.Services.AddAuthorizationBuilder()
-    .AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"))
-    .AddPolicy("ModeratePhotoRole", policy => policy.RequireRole("Admin", "Moderator"));
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -106,9 +104,11 @@ try
 {
     var context = services.GetRequiredService<AppDbContext>();
     var userManager = services.GetRequiredService<UserManager<AppUser>>();
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     await context.Database.MigrateAsync();
     await context.Connections.ExecuteDeleteAsync();
     await Seed.SeedUsers(userManager, context);
+    await Seed.CleanupLegacyAdministration(userManager, roleManager);
 }
 catch (Exception ex)
 {

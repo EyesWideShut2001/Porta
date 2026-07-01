@@ -81,16 +81,30 @@ public class Seed
             await userManager.AddToRoleAsync(user, "Member");
         }
 
-        var admin = new AppUser
+    }
+
+    public static async Task CleanupLegacyAdministration(
+        UserManager<AppUser> userManager,
+        RoleManager<IdentityRole> roleManager)
+    {
+        var seededAdmin = await userManager.FindByEmailAsync("admin@test.com");
+        if (seededAdmin != null)
         {
-            UserName = "admin@test.com",
-            Email = "admin@test.com",
-            DisplayName = "Admin"
-        };
+            await userManager.DeleteAsync(seededAdmin);
+        }
 
-        await userManager.CreateAsync(admin, "Pa$$w0rd");
-        await userManager.AddToRolesAsync(admin, ["Admin", "Moderator"]);
+        foreach (var roleName in new[] { "Admin", "Moderator" })
+        {
+            var role = await roleManager.FindByNameAsync(roleName);
+            if (role == null) continue;
 
+            var users = await userManager.GetUsersInRoleAsync(roleName);
+            foreach (var user in users)
+            {
+                await userManager.RemoveFromRoleAsync(user, roleName);
+            }
 
+            await roleManager.DeleteAsync(role);
+        }
     }
 }
