@@ -25,4 +25,11 @@
     <Folder Include="SignalR/" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Data/UserSeedData.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
