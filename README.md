@@ -21,7 +21,17 @@ The Angular client runs at `http://localhost:4200/`.
 
 ## Required API settings
 
-Add the Cloudinary settings to the API configuration, for example in `API/appsettings.Development.json`:
+For Docker, copy the environment template and fill in the API secrets:
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+The client is available at `http://localhost:4200`, and the API is also exposed at
+`http://localhost:5000`. The client proxies `/api` and `/hubs` to the API container.
+
+ASP.NET Core maps the Compose environment variables to this configuration:
 
 ```json
 "CloudinarySettings": {
@@ -30,3 +40,5 @@ Add the Cloudinary settings to the API configuration, for example in `API/appset
   "ApiSecret": "API_SECRET"
 }
 ```
+
+The SQLite database is stored in the named volume `api-data`.

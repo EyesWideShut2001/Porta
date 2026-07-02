@@ -1,0 +1,29 @@
+services:
+  api:
+    build:
+      context: ./API
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__DefaultConnection: Data Source=/app/data/app.db
+      TokenKey: "${TOKEN_KEY:?TOKEN_KEY must be set in .env}"
+      CloudinarySettings__CloudName: "${CLOUDINARY_CLOUD_NAME:?CLOUDINARY_CLOUD_NAME must be set in .env}"
+      CloudinarySettings__ApiKey: "${CLOUDINARY_API_KEY:?CLOUDINARY_API_KEY must be set in .env}"
+      CloudinarySettings__ApiSecret: "${CLOUDINARY_API_SECRET:?CLOUDINARY_API_SECRET must be set in .env}"
+    ports:
+      - "5000:8080"
+    volumes:
+      - api-data:/app/data
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ./client
+    depends_on:
+      - api
+    ports:
+      - "4200:80"
+    restart: unless-stopped
+
+volumes:
+  api-data:

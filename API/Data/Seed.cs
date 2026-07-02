@@ -1,6 +1,4 @@
 using System;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using API.DTOs;
 using API.Entities;
@@ -18,18 +16,46 @@ public class Seed
         var memberData = await File.ReadAllTextAsync("Data/UserSeedData.json");
         var members = JsonSerializer.Deserialize<List<SeedUserDto>>(memberData);
 
-        if (members == null)
+        if (members is not { Count: > 0 })
         {
-            Console.WriteLine("No membersin seed data!");
-            return;
+            throw new InvalidDataException("No users were found in the seed data file");
         }
-
 
         var interests = await context.Interests.OrderBy(x => x.Id).ToListAsync();
 
-        for (var memberIndex = 0; memberIndex < members.Count; memberIndex++)
+        foreach (var member in members)
         {
-            var member = members[memberIndex];
+            var photoUrls = member.ImageUrls
+                .Select(x => x.Trim())
+                .Where(x => x.Length > 0)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (photoUrls.Count != member.ImageUrls.Count || photoUrls.Count is < 2 or > 8)
+            {
+                throw new InvalidDataException(
+                    $"Seed user '{member.Email}' must have between 2 and 8 unique image URLs");
+            }
+
+            var interestIds = member.InterestIds.Distinct().ToList();
+            if (interestIds.Count == 0 || interestIds.Count != member.InterestIds.Count)
+            {
+                throw new InvalidDataException(
+                    $"Seed user '{member.Email}' must have at least one interest and no duplicates");
+            }
+
+            var memberInterests = interests
+                .Where(x => interestIds.Contains(x.Id))
+                .ToList();
+
+            if (memberInterests.Count != interestIds.Count)
+            {
+                var invalidInterestIds = interestIds.Except(memberInterests.Select(x => x.Id));
+                throw new InvalidDataException(
+                    $"Seed user '{member.Email}' has invalid interest IDs: {string.Join(", ", invalidInterestIds)}");
+            }
+
+            var primaryImageUrl = photoUrls[0];
 
             var user = new AppUser
             {
@@ -37,48 +63,47 @@ public class Seed
                 Email = member.Email,
                 UserName = member.Email,
                 DisplayName = member.DisplayName,
-                ImageUrl = member.ImageUrl,
+                ImageUrl = primaryImageUrl,
                 Member = new Member
                 {
                     Id = member.Id,
                     DisplayName = member.DisplayName,
                     Description = member.Description,
                     DateOfBirth = member.DateOfBirth,
-                    ImageUrl = member.ImageUrl,
+                    ImageUrl = primaryImageUrl,
                     Gender = member.Gender,
                     City = member.City,
                     Country = member.Country,
                     LastActive = member.LastActive,
                     Created = member.Created,
-                    Interests = interests
-                        .Where(x => (x.Id + memberIndex) % 7 == 0)
-                        .Take(6)
+                    Interests = memberInterests,
+                    Photos = photoUrls
+                        .Select((url, index) => new Photo
+                        {
+                            Url = url,
+                            MemberId = member.Id,
+                            DisplayOrder = index
+                        })
                         .ToList()
                 }
             };
-
-            user.Member.Photos.Add(new Photo
-            {
-                Url = member.ImageUrl!,
-                MemberId = member.Id,
-                DisplayOrder = 0
-            });
-
-            user.Member.Photos.Add(new Photo
-            {
-                Url = $"https://picsum.photos/seed/{member.Id}/600/600",
-                MemberId = member.Id,
-                DisplayOrder = 1
-            });
 
             var result = await userManager.CreateAsync(user, "Pa$$w0rd");
 
             if (!result.Succeeded)
             {
-                Console.WriteLine(result.Errors.First().Description);
+                throw new InvalidOperationException(
+                    $"Could not create seed user '{member.Email}': " +
+                    string.Join(", ", result.Errors.Select(x => x.Description)));
             }
 
-            await userManager.AddToRoleAsync(user, "Member");
+            var roleResult = await userManager.AddToRoleAsync(user, "Member");
+            if (!roleResult.Succeeded)
+            {
+                throw new InvalidOperationException(
+                    $"Could not assign the Member role to seed user '{member.Email}': " +
+                    string.Join(", ", roleResult.Errors.Select(x => x.Description)));
+            }
         }
 
     }
