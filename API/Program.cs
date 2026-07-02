@@ -12,6 +12,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+var corsPolicyName = "ClientApp";
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? ["http://localhost:4200", "https://localhost:4200"];
 
 // Add services to the container.
 
@@ -21,7 +24,14 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-builder.Services.AddCors();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(corsPolicyName, policy => policy
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials()
+        .WithOrigins(allowedOrigins));
+});
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IPhotoService, PhotoService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -32,6 +42,11 @@ builder.Services.AddSingleton<PresenceTracker>();
 
 builder.Services.AddIdentityCore<AppUser>(opt =>
 {
+    opt.Password.RequiredLength = 8;
+    opt.Password.RequiredUniqueChars = 1;
+    opt.Password.RequireDigit = true;
+    opt.Password.RequireLowercase = true;
+    opt.Password.RequireUppercase = true;
     opt.Password.RequireNonAlphanumeric = false;
     opt.User.RequireUniqueEmail = true;
 })
@@ -68,19 +83,13 @@ builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.JwtBearer
         };
     });
 
-builder.Services.AddAuthorizationBuilder()
-    .AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"))
-    .AddPolicy("ModeratePhotoRole", policy => policy.RequireRole("Admin", "Moderator"));
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 app.UseMiddleware<ExceptionMiddleware>();
-app.UseCors(x => x
-    .AllowAnyHeader()
-    .AllowAnyMethod()
-    .AllowCredentials()
-    .WithOrigins("http://localhost:4200", "https://localhost:4200"));
+app.UseCors(corsPolicyName);
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -95,9 +104,11 @@ try
 {
     var context = services.GetRequiredService<AppDbContext>();
     var userManager = services.GetRequiredService<UserManager<AppUser>>();
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     await context.Database.MigrateAsync();
     await context.Connections.ExecuteDeleteAsync();
-    await Seed.SeedUsers(userManager);
+    await Seed.SeedUsers(userManager, context);
+    await Seed.CleanupLegacyAdministration(userManager, roleManager);
 }
 catch (Exception ex)
 {

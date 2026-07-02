@@ -1,29 +1,34 @@
 @if (member(); as member) {
-  <div
+  <article
     routerLink="/members/{{ member.id }}"
-    class="card cursor-pointer transition-all duration-300 ease-in-out transform hover:-translate-y-2 relative"
+    class="group card card-border relative cursor-pointer overflow-hidden bg-base-100 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
   >
     <img
-      src="{{ member?.imageUrl || '/user.png' }}"
-      alt="{{ member.displayName }} image"
-      class="rounded-lg"
+      [src]="member.imageUrl || '/user.png'"
+      alt="{{ member.displayName }} profile"
+      class="aspect-square w-full object-cover transition duration-500 group-hover:scale-105"
     />
 
     @if (isOnline()) {
-      <span class="status status-success status-xl absolute top-3 left-3"></span>
+      <span
+        class="status status-success status-lg absolute left-3 top-3 ring-4 ring-base-100/70"
+        aria-label="Online"
+      ></span>
     }
 
     <button
+      type="button"
       (click)="toggleLike($event)"
-      class="absolute top-1 right-1 z-40 btn btn-ghost btn-circle"
+      class="btn btn-circle btn-ghost btn-sm absolute right-2 top-2 z-40 bg-base-100/80 text-error shadow-sm backdrop-blur-sm"
+      [attr.aria-label]="hasLiked() ? 'Remove like' : 'Like member'"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        [attr.fill]="hasLiked() ? 'red' : 'none'"
+        [attr.fill]="hasLiked() ? 'currentColor' : 'none'"
         viewBox="0 0 24 24"
         stroke-width="1.5"
         stroke="currentColor"
-        class="size-7"
+        class="size-6"
       >
         <path
           stroke-linecap="round"
@@ -32,13 +37,14 @@
         />
       </svg>
     </button>
+
     <div
-      class="card-actions z-40 absolute bottom-0 w-full px-3 py-1 rounded-b-lg bg-gradient-to-t from-black via-black/75 to-black/0"
+      class="absolute inset-x-0 bottom-0 bg-linear-to-t from-neutral via-neutral/80 to-transparent px-4 pb-3 pt-12 text-neutral-content"
     >
-      <div class="flex flex-col text-white">
-        <span class="font-semibold">{{ member.displayName }}, {{ member.dateOfBirth | age }}</span>
-        <span class="text-sm">{{ member.city }}</span>
+      <div class="text-lg font-semibold leading-tight">
+        {{ member.displayName }}, {{ member.dateOfBirth | age }}
       </div>
+      <div class="mt-1 text-sm opacity-80">{{ member.city }}</div>
     </div>
-  </div>
+  </article>
 }

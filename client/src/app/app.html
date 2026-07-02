@@ -1,11 +1,14 @@
 <app-nav />
 
-<div
-  [class.mt-24]="router.url !== '/'"
-  [class.container]="router.url !== '/'"
-  [class.mx-auto]="router.url !== '/'"
+<main
+  [class.min-h-dvh]="!isPublicLandingRoute()"
+  [class.pt-20]="!isPublicLandingRoute()"
+  [class.container]="!isPublicLandingRoute()"
+  [class.mx-auto]="!isPublicLandingRoute()"
+  [class.bg-base-200]="!isPublicLandingRoute()"
+  [class.px-4]="!isPublicLandingRoute()"
 >
   <router-outlet />
-</div>
+</main>
 
 <!-- <app-confirm-dialog/> -->

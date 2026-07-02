@@ -22,6 +22,9 @@ export class MemberService {
     params = params.append('maxAge', memberParams.maxAge);
     params = params.append('orderBy', memberParams.orderBy);
     if (memberParams.gender) params = params.append('gender', memberParams.gender);
+    for (const interestId of memberParams.interestIds ?? []) {
+      params = params.append('interestIds', interestId);
+    }
 
     return this.http.get<PaginatedResult<Member>>(this.baseUrl + 'members', { params }).pipe(
       tap(() => {
@@ -42,7 +45,7 @@ export class MemberService {
     return this.http.get<Photo[]>(this.baseUrl + 'members/' + id + '/photos');
   }
 
-  updateMember(member: EditableMember) {
+  updateMember(member: Partial<EditableMember>) {
     return this.http.put(this.baseUrl + 'members', member);
   }
 
@@ -52,8 +55,22 @@ export class MemberService {
     return this.http.post<Photo>(this.baseUrl + 'members/add-photo', formData);
   }
 
-  setMainPhoto(photo: Photo) {
-    return this.http.put(this.baseUrl + 'members/set-main-photo/' + photo.id, {});
+  updatePhotos(photoOrder: string[], newPhotos: File[]) {
+    const formData = new FormData();
+
+    for (const photoKey of photoOrder) {
+      formData.append('photoOrder', photoKey);
+    }
+
+    for (const photo of newPhotos) {
+      formData.append('newPhotos', photo, photo.name);
+    }
+
+    return this.http.put<Photo[]>(this.baseUrl + 'members/photos', formData);
+  }
+
+  reorderPhotos(photoIds: number[]) {
+    return this.http.put(this.baseUrl + 'members/reorder-photos', { photoIds });
   }
 
   deletePhoto(photoId: number) {

@@ -5,7 +5,6 @@ import { MemberDetailed } from '../features/members/member-detailed/member-detai
 import { Lists } from '../features/lists/lists';
 import { Messages } from '../features/messages/messages';
 import { authGuard } from '../core/guards/auth-guard';
-import { TestErrors } from '../features/test-errors/test-errors';
 import { NotFound } from '../shared/errors/not-found/not-found';
 import { ServerError } from '../shared/errors/server-error/server-error';
 import { MemberProfile } from '../features/members/member-profile/member-profile';
@@ -13,11 +12,14 @@ import { MemberPhotos } from '../features/members/member-photos/member-photos';
 import { MemberMessages } from '../features/members/member-messages/member-messages';
 import { memberResolver } from '../features/members/member-resolver';
 import { preventUnsavedChangesGuard } from '../core/guards/prevent-unsaved-changes-guard';
-import { Admin } from '../features/admin/admin';
-import { adminGuard } from '../core/guards/admin-guard';
+import { guestGuard } from '../core/guards/guest-guard';
+import { memberMessagesGuard } from '../core/guards/member-messages-guard';
+import { LearnMore } from '../features/learn-more/learn-more';
 
 export const routes: Routes = [
-  { path: '', component: Home },
+  { path: '', pathMatch: 'full', component: Home, canActivate: [guestGuard] },
+  { path: 'register', component: Home, canActivate: [guestGuard], data: { registerMode: true } },
+  { path: 'learn-more', component: LearnMore, title: 'Learn More' },
   {
     path: '',
     runGuardsAndResolvers: 'always',
@@ -38,17 +40,18 @@ export const routes: Routes = [
             canDeactivate: [preventUnsavedChangesGuard],
           },
           { path: 'photos', component: MemberPhotos, title: 'Photos' },
-          { path: 'messages', component: MemberMessages, title: 'Messages' },
+          {
+            path: 'messages',
+            component: MemberMessages,
+            title: 'Messages',
+            canActivate: [memberMessagesGuard],
+          },
         ],
       },
       { path: 'lists', component: Lists },
       { path: 'messages', component: Messages },
-      { path: 'admin', component: Admin, canActivate: [adminGuard] },
+      { path: 'server-error', component: ServerError },
+      { path: '**', component: NotFound },
     ],
   },
-
-  { path: 'errors', component: TestErrors },
-  { path: 'server-error', component: ServerError },
-
-  { path: '**', component: NotFound },
 ];

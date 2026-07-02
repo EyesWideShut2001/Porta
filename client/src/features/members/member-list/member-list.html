@@ -1,13 +1,30 @@
 @if (paginatedMembers(); as paginatedResult) {
-  <div class="flex flex-col w-full">
-    <div class="flex justify-between items-center">
-      <div class="flex gap-3 items-center">
-        <button (click)="openModal()" class="btn btn-primary">Select Filters</button>
-        <button (click)="resetFilters()" class="btn btn-neutral">Reset Filters</button>
-        <div class="text-lg bg-base-100 py-2 px-4 border-1 rounded-lg text-primary capitalize">
-          {{ displayMessage }}
+  <section class="flex h-[calc(100dvh-5rem)] w-full flex-col gap-4 py-4">
+    <header
+      class="card card-border shrink-0 bg-base-100 px-4 py-3 shadow-sm sm:px-5 lg:flex-row lg:items-center lg:justify-between"
+    >
+      <div class="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
+        <div class="shrink-0">
+          <h1 class="text-2xl font-bold">Discover members</h1>
+          <p class="text-sm text-base-content/60">Find people who fit what you are looking for.</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" (click)="openModal()" class="btn btn-primary btn-sm">
+            Filters
+          </button>
+          <button type="button" (click)="resetFilters()" class="btn btn-ghost btn-sm">
+            Reset
+          </button>
+          <div
+            class="max-w-xl truncate rounded-box bg-base-200 px-3 py-2 text-xs font-medium text-base-content/70"
+            title="{{ displayMessage }}"
+          >
+            {{ displayMessage }}
+          </div>
         </div>
       </div>
+
       @if (paginatedResult.metadata; as metadata) {
         <app-paginator
           [pageNumber]="metadata.currentPage"
@@ -17,20 +34,36 @@
           (pageChange)="onPageChange($event)"
         />
       }
-    </div>
+    </header>
+
     @if (paginatedResult.items; as members) {
-      <div class="grid grid-cols-5 gap-6">
-        @for (member of members; track member.id) {
-          <app-member-card [member]="member" />
-        }
-      </div>
+      @if (members.length > 0) {
+        <div
+          class="grid min-h-0 flex-1 grid-cols-2 gap-4 overflow-y-auto pb-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+        >
+          @for (member of members; track member.id) {
+            <app-member-card [member]="member" />
+          }
+        </div>
+      } @else {
+        <div class="card card-border flex flex-1 items-center justify-center bg-base-100 shadow-sm">
+          <div class="text-center">
+            <h2 class="text-xl font-semibold">No members found</h2>
+            <p class="mt-2 text-base-content/60">Try widening or resetting your filters.</p>
+            <button type="button" (click)="resetFilters()" class="btn btn-primary btn-sm mt-4">
+              Reset filters
+            </button>
+          </div>
+        </div>
+      }
     }
-  </div>
+  </section>
 }
 
 <app-filter-modal
   #filterModal
   [hidden]="!paginatedMembers()"
+  [memberParams]="memberParams"
   (closeModal)="onClose()"
   (submitData)="onFilterChange($event)"
 ></app-filter-modal>

@@ -17,9 +17,13 @@
   </svg>
 
   <h1 class="card-title text-4xl justify-center">Server error</h1>
-  <p class="card-body text-xl text-center">{{ error.message }}</p>
-  <button class="btn btn-primary" (click)="detailsToggle()">Details</button>
-  @if (showDetails) {
-    <div>{{ error.details }}</div>
+  <p class="card-body text-xl text-center">
+    {{ error?.message ?? 'The server returned an unexpected error.' }}
+  </p>
+  @if (error?.details) {
+    <button class="btn btn-primary" (click)="detailsToggle()">Details</button>
+    @if (showDetails) {
+      <div>{{ error?.details }}</div>
+    }
   }
 </div>

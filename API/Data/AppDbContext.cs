@@ -4,6 +4,7 @@ using API.Entities;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using API.Helpers;
 
 
 namespace API.Data;
@@ -17,6 +18,7 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<AppUser>
     public DbSet<Message> Messages { get; set; }
     public DbSet<Group> Groups { get; set; }
     public DbSet<Connection> Connections { get; set; }
+    public DbSet<Interest> Interests { get; set; }
 
     //public DbSet <Sport> Sports { get; set; }
 
@@ -26,9 +28,7 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<AppUser>
 
         modelBuilder.Entity<IdentityRole>()
                 .HasData(
-                        new IdentityRole { Id = "member-id", Name = "Member", NormalizedName = "MEMBER" },
-                        new IdentityRole { Id = "moderator-id", Name = "Moderator", NormalizedName = "MODERATOR" },
-                        new IdentityRole { Id = "admin-id", Name = "Admin", NormalizedName = "ADMIN" }
+                        new IdentityRole { Id = "member-id", Name = "Member", NormalizedName = "MEMBER" }
                 );
 
         modelBuilder.Entity<Message>()
@@ -56,6 +56,27 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<AppUser>
                 .WithMany(t => t.LikedByMembers)
                 .HasForeignKey(s => s.TargetMemberId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<Member>()
+                .HasMany(x => x.Interests)
+                .WithMany(x => x.Members)
+                .UsingEntity<Dictionary<string, object>>(
+                        "MemberInterests",
+                        right => right
+                                .HasOne<Interest>()
+                                .WithMany()
+                                .HasForeignKey("InterestId")
+                                .OnDelete(DeleteBehavior.Cascade),
+                        left => left
+                                .HasOne<Member>()
+                                .WithMany()
+                                .HasForeignKey("MemberId")
+                                .OnDelete(DeleteBehavior.Cascade),
+                        join => join.HasKey("MemberId", "InterestId")
+                );
+
+        modelBuilder.Entity<Interest>()
+                .HasData(InterestCatalog.All.Select(x => new Interest { Id = x.Id, Name = x.Name }));
 
 
 

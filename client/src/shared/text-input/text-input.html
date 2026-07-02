@@ -4,8 +4,10 @@
     class="input w-full"
     [type]="type()"
     [max]="maxDate()"
+    [attr.autocomplete]="autocomplete() || null"
+    [attr.maxlength]="maxlength() || null"
+    [attr.minlength]="minlength() || null"
     [class.input-error]="control.invalid && control.touched"
-    [class.input-success]="control.valid && control.touched"
     [formControl]="control"
     [placeholder]="label()"
   />
@@ -24,6 +26,11 @@
   @if (control.hasError('maxlength') && control.touched) {
     <div class="validation-hint text-error text-xs">
       {{ label() }} must be at most {{ control.errors?.['maxlength'].requiredLength }} characters
+    </div>
+  }
+  @if (control.hasError('pattern') && control.touched) {
+    <div class="validation-hint text-error text-xs">
+      {{ label() }} must include uppercase, lowercase, and a number
     </div>
   }
   @if (control.hasError('passwordMismatch') && control.touched) {

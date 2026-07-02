@@ -1,88 +1,77 @@
-<div class="flex flex-col w-full">
-  <div class="flex justify-between items-center">
-    <div class="tabs tabs-box tabs-lg text-primary w-fit">
-      @for (tab of tabs; track $index) {
-        <button
-          role="tab"
-          class="tab"
-          [class.tab-active]="container === tab.value"
-          (click)="setContainer(tab.value)"
-        >
-          {{ tab.label }}
-        </button>
-      }
-    </div>
-    @if (paginatedMessages()?.metadata; as metadata) {
-      <app-paginator
-        [hidden]="metadata.totalCount === 0"
-        [pageNumber]="metadata.currentPage"
-        [pageSize]="metadata.pageSize"
-        [totalCount]="metadata.totalCount"
-        [totalPages]="metadata.totalPages"
-        (pageChange)="onPageChange($event)"
-      />
-    }
-  </div>
-</div>
+<section class="flex h-[calc(100dvh-5rem)] w-full flex-col py-4">
+  <div class="card card-border min-h-0 flex-1 overflow-hidden bg-base-100 shadow-sm">
+    <header class="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-base-300 p-4 sm:px-5">
+      <div class="flex flex-wrap items-center gap-3">
+        <div>
+          <h1 class="text-2xl font-bold">Messages</h1>
+          <p class="text-sm text-base-content/60">All your conversations in one place.</p>
+        </div>
+        @if (presenceService.unreadMessageCount() > 0) {
+          <span class="badge badge-error badge-soft badge-lg">
+            {{ presenceService.unreadMessageCount() }} unread
+          </span>
+        }
+      </div>
 
-<div class="overflow-x-auto mt-3">
-  <table class="table bg-base-100 table-fixed w-full">
-    <thead>
-      <tr>
-        <th class="w-2/9">Sender / Recipient</th>
-        <th class="w-4/9">Message</th>
-        <th class="w-2/9">Date</th>
-        <th class="w-1/9"></th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (message of paginatedMessages()?.items; track message.id) {
-        <tr
-          [class.font-bold]="isInbox && !message.dateRead"
-          routerLink="/members/{{ isInbox ? message.senderId : message.recipientId }}/messages"
-          class="hover:bg-base-200 cursor-pointer"
-        >
-          <td class="w-2/9">
-            <div class="flex items-center gap-3">
-              <div class="h-12 w-12">
+      @if (paginatedConversations()?.metadata; as metadata) {
+        <app-paginator
+          [hidden]="metadata.totalCount === 0"
+          [pageNumber]="metadata.currentPage"
+          [pageSize]="metadata.pageSize"
+          [totalCount]="metadata.totalCount"
+          [totalPages]="metadata.totalPages"
+          (pageChange)="onPageChange($event)"
+        />
+      }
+    </header>
+
+    <div class="min-h-0 flex-1 overflow-auto">
+      <ul class="list divide-y divide-base-300">
+        @for (conversation of paginatedConversations()?.items; track conversation.otherMemberId) {
+          <li
+            class="list-row cursor-pointer items-center gap-4 px-4 py-4 transition-colors hover:bg-primary/5"
+            [routerLink]="['/members', conversation.otherMemberId, 'messages']"
+          >
+            <div
+              class="avatar self-start"
+              [class.avatar-online]="presenceService.onlineUsers().includes(conversation.otherMemberId)"
+            >
+              <div class="w-12 rounded-full ring-1 ring-base-300">
                 <img
-                  class="rounded-full"
-                  src="{{
-                    isInbox
-                      ? message.senderImageUrl || '/user.png'
-                      : message.recipientImageUrl || '/user.png'
-                  }}"
-                  alt="image of member"
+                  [src]="conversation.otherMemberImageUrl || '/user.png'"
+                  [alt]="conversation.otherMemberDisplayName"
                 />
               </div>
-              <div>{{ isInbox ? message.senderDisplayName : message.recipientDisplayName }}</div>
             </div>
-          </td>
-          <td class="truncate w-4/9">{{ message.content }}</td>
-          <td class="w-2/9">{{ message.messageSent | date: 'medium' }}</td>
-          <td class="w-1/9">
-            <button
-              (click)="confirmDelete($event, message.id)"
-              class="btn btn-circle btn-ghost text-error"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-                class="size-6"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
-                />
-              </svg>
-            </button>
-          </td>
-        </tr>
-      }
-    </tbody>
-  </table>
-</div>
+
+            <div class="list-col-grow min-w-0">
+              <div class="flex items-center gap-2">
+                <h2 class="truncate font-semibold">{{ conversation.otherMemberDisplayName }}</h2>
+                @if (conversation.unreadCount > 0) {
+                  <span class="badge badge-error badge-sm">
+                    {{ conversation.unreadCount > 99 ? '99+' : conversation.unreadCount }}
+                  </span>
+                }
+              </div>
+
+              <p class="truncate text-sm text-base-content/70">
+                @if (conversation.lastMessageFromCurrentUser) {
+                  <span class="text-base-content/50">You: </span>
+                }
+                {{ conversation.lastMessage }}
+              </p>
+            </div>
+
+            <div class="list-col-wrap text-right text-xs text-base-content/60">
+              {{ conversation.lastMessageSent | date: 'medium' }}
+            </div>
+          </li>
+        } @empty {
+          <li class="px-4 py-16 text-center text-base-content/60">
+            No conversations yet.
+          </li>
+        }
+      </ul>
+    </div>
+  </div>
+</section>

@@ -1,40 +1,90 @@
 using System;
-using System.Security.Cryptography;
-using System.Text;
-using API.Data;
 using API.DTOs;
+using API.Data;
 using API.Entities;
 using API.Extensions;
 using API.Interfaces;
-using API.Services;
-using CloudinaryDotNet.Actions;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers;
 
-public class AccountController(UserManager<AppUser> userManager, ITokenService tokenService) : BaseApiController
+public class AccountController(
+    UserManager<AppUser> userManager,
+    ITokenService tokenService,
+    IPhotoService photoService,
+    IWebHostEnvironment env,
+    AppDbContext context) : BaseApiController
 {
 
     [HttpPost("register")]  // api/account/register
-    public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<UserDto>> Register([FromForm] RegisterDto registerDto)
     {
+        var email = registerDto.Email.Trim();
+        var displayName = registerDto.DisplayName.Trim();
+        var city = registerDto.City.Trim();
+        var country = registerDto.Country.Trim();
+        var description = string.IsNullOrWhiteSpace(registerDto.Description)
+            ? null
+            : registerDto.Description.Trim();
+        var interestIds = registerDto.InterestIds.Distinct().ToList();
+        var interests = await context.Interests
+            .Where(x => interestIds.Contains(x.Id))
+            .ToListAsync();
+
+        if (interests.Count != interestIds.Count)
+        {
+            ModelState.AddModelError(nameof(RegisterDto.InterestIds), "One or more interests are invalid");
+            return ValidationProblem();
+        }
+
+        var uploadedPhotos = new List<Photo>();
+
+        foreach (var file in registerDto.Photos)
+        {
+            var uploadResult = await photoService.UploadPhotoAsync(file);
+
+            if (uploadResult.Error != null)
+            {
+                await DeleteUploadedPhotos(uploadedPhotos);
+                ModelState.AddModelError(nameof(RegisterDto.Photos), uploadResult.Error.Message);
+                return ValidationProblem();
+            }
+
+            if (uploadResult.SecureUrl == null)
+            {
+                await DeleteUploadedPhotos(uploadedPhotos);
+                ModelState.AddModelError(nameof(RegisterDto.Photos), "Problem uploading photo");
+                return ValidationProblem();
+            }
+
+            uploadedPhotos.Add(new Photo
+            {
+                Url = uploadResult.SecureUrl.AbsoluteUri,
+                PublicId = uploadResult.PublicId,
+                DisplayOrder = uploadedPhotos.Count
+            });
+        }
 
         var user = new AppUser
         {
-            DisplayName = registerDto.DisplayName,
-            Email = registerDto.Email,
-            UserName = registerDto.Email,
+            DisplayName = displayName,
+            Email = email,
+            UserName = email,
+            ImageUrl = uploadedPhotos[0].Url,
             Member = new Member
             {
-                DisplayName = registerDto.DisplayName,
-                Gender = registerDto.Gender,
-                City = registerDto.City,
-                Country = registerDto.Country,
-                DateOfBirth = registerDto.DateOfBirth
-
+                DisplayName = displayName,
+                Gender = registerDto.Gender.Trim().ToLowerInvariant(),
+                City = city,
+                Country = country,
+                DateOfBirth = registerDto.DateOfBirth,
+                Description = description,
+                ImageUrl = uploadedPhotos[0].Url,
+                Photos = uploadedPhotos,
+                Interests = interests
             }
         };
 
@@ -42,15 +92,22 @@ public class AccountController(UserManager<AppUser> userManager, ITokenService t
 
         if (!result.Succeeded)
         {
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError("identity", error.Description);
-            }
+            await DeleteUploadedPhotos(uploadedPhotos);
+            AddIdentityErrorsToModelState(result.Errors);
 
             return ValidationProblem();
         }
 
         var roleResult = await userManager.AddToRoleAsync(user, "Member");
+
+        if (!roleResult.Succeeded)
+        {
+            await userManager.DeleteAsync(user);
+            await DeleteUploadedPhotos(uploadedPhotos);
+            AddIdentityErrorsToModelState(roleResult.Errors);
+
+            return ValidationProblem();
+        }
 
         await SetRefreshTokenCookie(user);
 
@@ -103,25 +160,63 @@ public class AccountController(UserManager<AppUser> userManager, ITokenService t
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
+            Secure = !env.IsDevelopment(),
+            SameSite = env.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.Strict,
+            Path = "/",
             Expires = DateTime.UtcNow.AddDays(7)
         };
 
+        DeleteRefreshTokenCookie("/api/account");
         Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
     }
 
-    [Authorize]
     [HttpPost("logout")]
     public async Task<ActionResult> Logout()
     {
-        await userManager.Users
-            .Where(x => x.Id == User.GetMemberId())
-            .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.RefreshToken, _ => null)
-                                                  .SetProperty(x => x.RefreshTokenExpiry, _ => null));
-        Response.Cookies.Delete("refreshToken");
-        return Ok();
+        var refreshToken = Request.Cookies["refreshToken"];
+
+        if (refreshToken != null)
+        {
+            await userManager.Users
+                .Where(x => x.RefreshToken == refreshToken)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(x => x.RefreshToken, _ => null)
+                    .SetProperty(x => x.RefreshTokenExpiry, _ => null));
+        }
+
+        DeleteRefreshTokenCookie("/");
+        DeleteRefreshTokenCookie("/api/account");
+
+        return NoContent();
     }
 
+    private void DeleteRefreshTokenCookie(string path)
+    {
+        Response.Cookies.Delete("refreshToken", new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = !env.IsDevelopment(),
+            SameSite = env.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.Strict,
+            Path = path
+        });
+    }
+
+    private void AddIdentityErrorsToModelState(IEnumerable<IdentityError> errors)
+    {
+        foreach (var error in errors)
+        {
+            ModelState.AddModelError("identity", error.Description);
+        }
+    }
+
+    private async Task DeleteUploadedPhotos(IEnumerable<Photo> photos)
+    {
+        foreach (var photo in photos)
+        {
+            if (photo.PublicId == null) continue;
+
+            await photoService.DeletePhotoAsync(photo.PublicId);
+        }
+    }
 
 }

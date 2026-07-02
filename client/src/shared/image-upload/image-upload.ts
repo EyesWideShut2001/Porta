@@ -12,6 +12,8 @@ export class ImageUpload {
   private fileToUpload: File | null = null;
   uploadFile = output<File>();
   loading = input<boolean>(false);
+  actionLabel = input<string>('Upload');
+  disabled = input<boolean>(false);
 
   onDragOver(event: DragEvent) {
     event.preventDefault();
@@ -37,6 +39,16 @@ export class ImageUpload {
     }
   }
 
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (file) {
+      this.previewImage(file);
+      this.fileToUpload = file;
+    }
+  }
+
   onCancel() {
     this.fileToUpload = null;
     this.imageSrc.set(null);
@@ -45,6 +57,7 @@ export class ImageUpload {
   onUploadFile() {
     if (this.fileToUpload) {
       this.uploadFile.emit(this.fileToUpload);
+      this.onCancel();
     }
   }
 

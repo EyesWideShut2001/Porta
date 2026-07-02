@@ -124,6 +124,43 @@ namespace API.Data.Migrations
                     b.ToTable("Groups");
                 });
 
+            modelBuilder.Entity("API.Entities.Interest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Interests");
+
+                    b.HasData(
+                        new { Id = 1, Name = "Hiking" }, new { Id = 2, Name = "Camping" },
+                        new { Id = 3, Name = "Travel" }, new { Id = 4, Name = "Road Trips" },
+                        new { Id = 5, Name = "Nature" }, new { Id = 6, Name = "Beach" },
+                        new { Id = 7, Name = "Gardening" }, new { Id = 8, Name = "Pets" },
+                        new { Id = 9, Name = "Volunteering" }, new { Id = 10, Name = "Meditation" },
+                        new { Id = 11, Name = "Running" }, new { Id = 12, Name = "Gym" },
+                        new { Id = 13, Name = "Yoga" }, new { Id = 14, Name = "Cycling" },
+                        new { Id = 15, Name = "Swimming" }, new { Id = 16, Name = "Football" },
+                        new { Id = 17, Name = "Basketball" }, new { Id = 18, Name = "Tennis" },
+                        new { Id = 19, Name = "Skiing" }, new { Id = 20, Name = "Dancing" },
+                        new { Id = 21, Name = "Reading" }, new { Id = 22, Name = "Writing" },
+                        new { Id = 23, Name = "Photography" }, new { Id = 24, Name = "Movies" },
+                        new { Id = 25, Name = "TV Series" }, new { Id = 26, Name = "Music" },
+                        new { Id = 27, Name = "Concerts" }, new { Id = 28, Name = "Theatre" },
+                        new { Id = 29, Name = "Museums" }, new { Id = 30, Name = "Podcasts" },
+                        new { Id = 31, Name = "Cooking" }, new { Id = 32, Name = "Baking" },
+                        new { Id = 33, Name = "Coffee" }, new { Id = 34, Name = "Restaurants" },
+                        new { Id = 35, Name = "Board Games" }, new { Id = 36, Name = "Art" },
+                        new { Id = 37, Name = "Fashion" }, new { Id = 38, Name = "Gaming" },
+                        new { Id = 39, Name = "Technology" }, new { Id = 40, Name = "DIY Projects" });
+                });
+
             modelBuilder.Entity("API.Entities.Member", b =>
                 {
                     b.Property<string>("Id")
@@ -180,6 +217,21 @@ namespace API.Data.Migrations
                     b.ToTable("Likes");
                 });
 
+            modelBuilder.Entity("MemberInterests", b =>
+                {
+                    b.Property<string>("MemberId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("InterestId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("MemberId", "InterestId");
+
+                    b.HasIndex("InterestId");
+
+                    b.ToTable("MemberInterests");
+                });
+
             modelBuilder.Entity("API.Entities.Message", b =>
                 {
                     b.Property<string>("Id")
@@ -220,6 +272,9 @@ namespace API.Data.Migrations
 
             modelBuilder.Entity("API.Entities.Photo", b =>
                 {
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
@@ -273,18 +328,6 @@ namespace API.Data.Migrations
                             Id = "member-id",
                             Name = "Member",
                             NormalizedName = "MEMBER"
-                        },
-                        new
-                        {
-                            Id = "moderator-id",
-                            Name = "Moderator",
-                            NormalizedName = "MODERATOR"
-                        },
-                        new
-                        {
-                            Id = "admin-id",
-                            Name = "Admin",
-                            NormalizedName = "ADMIN"
                         });
                 });
 
@@ -431,6 +474,30 @@ namespace API.Data.Migrations
                     b.Navigation("TargetMember");
                 });
 
+            modelBuilder.Entity("API.Entities.Interest", b =>
+                {
+                    b.HasMany("API.Entities.Member", "Members")
+                        .WithMany("Interests")
+                        .UsingEntity(
+                            "MemberInterests",
+                            right => right.HasOne("API.Entities.Member", null)
+                                .WithMany()
+                                .HasForeignKey("MemberId")
+                                .OnDelete(DeleteBehavior.Cascade)
+                                .IsRequired(),
+                            left => left.HasOne("API.Entities.Interest", null)
+                                .WithMany()
+                                .HasForeignKey("InterestId")
+                                .OnDelete(DeleteBehavior.Cascade)
+                                .IsRequired(),
+                            join =>
+                            {
+                                join.HasKey("MemberId", "InterestId");
+                                join.HasIndex("InterestId");
+                                join.ToTable("MemberInterests");
+                            });
+                });
+
             modelBuilder.Entity("API.Entities.Message", b =>
                 {
                     b.HasOne("API.Entities.Member", "Recipient")
@@ -523,8 +590,15 @@ namespace API.Data.Migrations
                     b.Navigation("Connections");
                 });
 
+            modelBuilder.Entity("API.Entities.Interest", b =>
+                {
+                    b.Navigation("Members");
+                });
+
             modelBuilder.Entity("API.Entities.Member", b =>
                 {
+                    b.Navigation("Interests");
+
                     b.Navigation("LikedByMembers");
 
                     b.Navigation("LikedMembers");

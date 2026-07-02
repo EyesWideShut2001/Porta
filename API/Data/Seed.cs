@@ -11,7 +11,7 @@ namespace API.Data;
 
 public class Seed
 {
-    public static async Task SeedUsers(UserManager<AppUser> userManager)
+    public static async Task SeedUsers(UserManager<AppUser> userManager, AppDbContext context)
     {
         if (await userManager.Users.AnyAsync()) return;
 
@@ -25,8 +25,11 @@ public class Seed
         }
 
 
-        foreach (var member in members)
+        var interests = await context.Interests.OrderBy(x => x.Id).ToListAsync();
+
+        for (var memberIndex = 0; memberIndex < members.Count; memberIndex++)
         {
+            var member = members[memberIndex];
 
             var user = new AppUser
             {
@@ -46,14 +49,26 @@ public class Seed
                     City = member.City,
                     Country = member.Country,
                     LastActive = member.LastActive,
-                    Created = member.Created
+                    Created = member.Created,
+                    Interests = interests
+                        .Where(x => (x.Id + memberIndex) % 7 == 0)
+                        .Take(6)
+                        .ToList()
                 }
             };
 
             user.Member.Photos.Add(new Photo
             {
                 Url = member.ImageUrl!,
-                MemberId = member.Id
+                MemberId = member.Id,
+                DisplayOrder = 0
+            });
+
+            user.Member.Photos.Add(new Photo
+            {
+                Url = $"https://picsum.photos/seed/{member.Id}/600/600",
+                MemberId = member.Id,
+                DisplayOrder = 1
             });
 
             var result = await userManager.CreateAsync(user, "Pa$$w0rd");
@@ -66,16 +81,30 @@ public class Seed
             await userManager.AddToRoleAsync(user, "Member");
         }
 
-        var admin = new AppUser
+    }
+
+    public static async Task CleanupLegacyAdministration(
+        UserManager<AppUser> userManager,
+        RoleManager<IdentityRole> roleManager)
+    {
+        var seededAdmin = await userManager.FindByEmailAsync("admin@test.com");
+        if (seededAdmin != null)
         {
-            UserName = "admin@test.com",
-            Email = "admin@test.com",
-            DisplayName = "Admin"
-        };
+            await userManager.DeleteAsync(seededAdmin);
+        }
 
-        await userManager.CreateAsync(admin, "Pa$$w0rd");
-        await userManager.AddToRolesAsync(admin, ["Admin", "Moderator"]);
+        foreach (var roleName in new[] { "Admin", "Moderator" })
+        {
+            var role = await roleManager.FindByNameAsync(roleName);
+            if (role == null) continue;
 
+            var users = await userManager.GetUsersInRoleAsync(roleName);
+            foreach (var user in users)
+            {
+                await userManager.RemoveFromRoleAsync(user, roleName);
+            }
 
+            await roleManager.DeleteAsync(role);
+        }
     }
 }

@@ -1,64 +1,103 @@
 <dialog #filterModal class="modal">
-  <div class="modal-box max-w-lg">
-    <h3 class="text-lg font-bold">Select filters</h3>
-    <div class="flex justify-between w-full items-center mt-6">
-      <div class="flex flex-col w-full gap-6">
-        <label class="flex justify-between items-center">
-          <span class="font-semibold">Select gender:</span>
-          <form class="filter">
-            <input type="reset" value="x" class="btn btn-square" />
-            <input
-              type="radio"
-              class="btn"
-              [(ngModel)]="memberParams().gender"
-              aria-label="Male"
-              name="gender"
-              value="male"
-            />
-            <input
-              type="radio"
-              class="btn"
-              [(ngModel)]="memberParams().gender"
-              aria-label="Female"
-              name="gender"
-              value="female"
-            />
-          </form>
-        </label>
-        <label class="flex justify-between items-center">
-          <span class="font-semibold">Select age</span>
-          <div class="flex gap-3">
-            <input
-              type="number"
-              class="input w-20"
-              [min]="18"
-              [(ngModel)]="memberParams().minAge"
-              name="minAge"
-              (change)="onMinAgeChange()"
-            />
-            <input
-              type="number"
-              class="input w-20"
-              [min]="memberParams().minAge || 18"
-              [(ngModel)]="memberParams().maxAge"
-              name="maxAge"
-              (change)="onMaxAgeChange()"
-            />
-          </div>
-        </label>
-        <label class="flex justify-between items-center">
-          <span class="font-semibold">Order by: </span>
-          <select name="orderBy" class="select" [(ngModel)]="memberParams().orderBy">
-            <option disabled selected>Order by</option>
-            <option value="created">Newest members</option>
-            <option value="lastActive">Last active</option>
-          </select>
-        </label>
-      </div>
+  <div class="modal-box max-w-xl border border-base-300 bg-base-100 shadow-xl">
+    <h3 class="text-2xl font-bold">Refine your matches</h3>
+    <p class="mt-1 text-sm text-base-content/60">Adjust the results to match your preferences.</p>
+
+    <div class="mt-7 flex w-full flex-col gap-6">
+      <label class="grid items-center gap-3 sm:grid-cols-[1fr_auto]">
+        <span class="font-semibold">Gender</span>
+        <form class="filter">
+          <input type="reset" value="All" class="btn" aria-label="All genders" />
+          <input
+            type="radio"
+            class="btn"
+            [(ngModel)]="memberParams().gender"
+            aria-label="Male"
+            name="gender"
+            value="male"
+          />
+          <input
+            type="radio"
+            class="btn"
+            [(ngModel)]="memberParams().gender"
+            aria-label="Female"
+            name="gender"
+            value="female"
+          />
+        </form>
+      </label>
+
+      <fieldset class="fieldset border-t border-base-300 pt-5">
+        <legend class="fieldset-legend text-base">Interests</legend>
+        <p class="mb-3 text-sm text-base-content/60">
+          Match any of the selected interests.
+        </p>
+        <div class="max-h-56 space-y-4 overflow-y-auto pr-2">
+          @for (group of interestGroups; track group.label) {
+            <div>
+              <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-base-content/50">
+                {{ group.label }}
+              </div>
+              <div class="flex flex-wrap gap-2">
+                @for (interest of group.interests; track interest.id) {
+                  <button
+                    type="button"
+                    class="btn btn-xs"
+                    [class.btn-primary]="isInterestSelected(interest.id)"
+                    [class.btn-ghost]="!isInterestSelected(interest.id)"
+                    (click)="toggleInterest(interest.id)"
+                    [attr.aria-pressed]="isInterestSelected(interest.id)"
+                  >
+                    {{ interest.name }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </fieldset>
+
+      <label class="grid items-center gap-3 sm:grid-cols-[1fr_auto]">
+        <span class="font-semibold">Age range</span>
+        <div class="flex gap-3">
+          <input
+            type="number"
+            class="input w-24"
+            [min]="18"
+            [(ngModel)]="memberParams().minAge"
+            name="minAge"
+            (change)="onMinAgeChange()"
+            aria-label="Minimum age"
+          />
+          <input
+            type="number"
+            class="input w-24"
+            [min]="memberParams().minAge || 18"
+            [(ngModel)]="memberParams().maxAge"
+            name="maxAge"
+            (change)="onMaxAgeChange()"
+            aria-label="Maximum age"
+          />
+        </div>
+      </label>
+
+      <label class="grid items-center gap-3 sm:grid-cols-[1fr_auto]">
+        <span class="font-semibold">Order by</span>
+        <select
+          name="orderBy"
+          class="select min-w-52"
+          [(ngModel)]="memberParams().orderBy"
+        >
+          <option disabled>Order by</option>
+          <option value="created">Newest members</option>
+          <option value="lastActive">Last active</option>
+        </select>
+      </label>
     </div>
 
     <div class="modal-action">
-      <button (click)="submit()" class="btn btn-primary">Submit</button>
+      <button type="button" (click)="close()" class="btn btn-ghost">Cancel</button>
+      <button type="button" (click)="submit()" class="btn btn-primary">Apply filters</button>
     </div>
   </div>
 
